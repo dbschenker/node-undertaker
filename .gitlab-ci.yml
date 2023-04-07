@@ -1,0 +1,40 @@
+variables:
+  TYPE: cli
+
+image: golang:1.20
+
+include:
+  - project: shared-scripts/gitlab-ci
+    file: /autodevops-golang-1.19.yml
+    ref: golang-pipeline
+  - project: shared-scripts/gitlab-ci
+    file: build-and-publish-docs.yml
+    ref: master
+
+build-and-publish-docs:
+  extends: .build_and_publish_docs
+  stage: build
+  rules:
+    - if: $CI_SERVER_HOST == "gilds-git.signintra.com" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# mockgen setup
+Test:
+  before_script:
+    - export PATH=$GOPATH/bin:$PATH
+    - go get github.com/golang/mock/mockgen
+    - go install github.com/golang/mock/mockgen
+Vet:
+  before_script:
+    - export PATH=$GOPATH/bin:$PATH
+    - go get github.com/golang/mock/mockgen
+    - go install github.com/golang/mock/mockgen
+Build:
+  before_script:
+    - export PATH=$GOPATH/bin:$PATH
+    - go get github.com/golang/mock/mockgen
+    - go install github.com/golang/mock/mockgen
+Dependency-Track:
+  before_script:
+  - export PATH=$GOPATH/bin:$PATH
+  - go get github.com/golang/mock/mockgen
+  - go install github.com/golang/mock/mockgen

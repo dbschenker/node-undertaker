@@ -1,0 +1,14 @@
+site_name: 'etcd-orchestrator docs' # (1)
+nav: #(2)
+  - Home: README.md
+  - Introduction: introduction.md
+  - Local development: local_development.md
+plugins: #(3)
+  - techdocs-core
+  - drawio-exporter:
+      drawio_args:
+        - --no-sandbox
+markdown_extensions: #(4)
+  - plantuml_markdown:
+      server: https://dis-plantuml.toolbox.aws.signintra.com
+docs_dir: docs #(5)
