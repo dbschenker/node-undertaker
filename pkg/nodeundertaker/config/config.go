@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/cmd/node-undertaker/flags"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/kubernetes/nodeprovider"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
 	CloudProvider cloudproviders.CloudProvider
+	NodeProvider  nodeprovider.NodeProvider
 	DrainTimeout  int
 	Port          int
 }

@@ -1,17 +1,25 @@
 package nodeundertaker
 
 import (
+	"context"
 	"fmt"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/cmd/node-undertaker/flags"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders/aws"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/k8snodeinformer"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/kubernetes/nodeprovider"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodehealthnotificationhandler"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability"
 	"github.com/spf13/viper"
+	"golang.org/x/sync/errgroup"
 )
 
 func Execute() error {
-	config, err := config.GetConfig()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	cfg, err := config.GetConfig()
 	if err != nil {
 		return err
 	}
@@ -23,18 +31,37 @@ func Execute() error {
 	if err != nil {
 		return err
 	}
-	config.CloudProvider = cloudProvider
+	cfg.CloudProvider = cloudProvider
+
+	nodeProvider, err := getNodeProvider(cfg)
+	if err != nil {
+		return err
+	}
+	cfg.NodeProvider = nodeProvider
+
+	var nodeHealthNotificationHandler nodehealthnotificationhandler.NODEHEALTHNOTIFICATIONHANDLER = nodehealthnotificationhandler.DefaultNodeHealthNotificationHandler{}
+
+	var k8sNodeInformer k8snodeinformer.K8SNODEINFORMER = k8snodeinformer.DefaultK8sNodeInformer{}
 
 	// do more init
-
+	//cloud provider clients
+	//k8s clientset
 	// start logic
+	startLogic(ctx, cfg, nodeHealthNotificationHandler, k8sNodeInformer)
 
-	err = observability.StartServer(config)
+	err = observability.StartServer(cfg)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func startLogic(ctx context.Context, cfg *config.Config, nodeHealthHandler nodehealthnotificationhandler.NODEHEALTHNOTIFICATIONHANDLER, nodeInformer k8snodeinformer.K8SNODEINFORMER) error {
+	g, ctx := errgroup.WithContext(ctx)
+	g.Go(func() error { return nodeHealthHandler.HandleHealthMessages(ctx, cfg) })
+	g.Go(func() error { return nodeInformer.StartInformer(ctx, cfg) })
+	return g.Wait()
 }
 
 func getCloudProvider() (cloudproviders.CloudProvider, error) {
@@ -47,4 +74,10 @@ func getCloudProvider() (cloudproviders.CloudProvider, error) {
 		return nil, fmt.Errorf("Unknown cloud provider: %s", cloudProviderName)
 	}
 
+}
+
+func getNodeProvider(cfg *config.Config) (nodeprovider.NodeProvider, error) {
+	ret := nodeprovider.K8sNodeProvider{}
+	ret.DrainTimeout = cfg.DrainTimeout
+	return ret, nil
 }
