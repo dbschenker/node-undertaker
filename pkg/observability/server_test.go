@@ -1,6 +1,7 @@
 package observability
 
 import (
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability/health"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -63,4 +64,13 @@ func TestMetricsServer(t *testing.T) {
 	arrStrings := strings.Split(string(response), "\n")
 	assert.Contains(t, arrStrings, "mytopic_mysystem_myapp 0")
 
+}
+
+func TestGetDefaultObservabilityServerAndSetupRoutes(t *testing.T) {
+	cfg := &config.Config{
+		Port: 8080,
+	}
+	res := GetDefaultObservabilityServer(cfg)
+	assert.Equal(t, res.server.Addr, ":8080")
+	res.SetupRoutes()
 }

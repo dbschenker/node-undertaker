@@ -9,7 +9,6 @@ import (
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability/metrics"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-
 	"net/http"
 )
 

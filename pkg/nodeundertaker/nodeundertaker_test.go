@@ -66,7 +66,7 @@ func TestStartLogicOk(t *testing.T) {
 
 	observability := mock_observability.NewMockOBSERVABILITYSERVER(mockCtrl)
 	observability.EXPECT().StartServer(gomock.Any()).Times(1).DoAndReturn(
-		func(context context.Context, cfg *config.Config) error {
+		func(context context.Context) error {
 			select {
 			case <-context.Done():
 				return fmt.Errorf(errorMsg)
@@ -106,7 +106,7 @@ func TestStartLogicNok(t *testing.T) {
 
 	observability := mock_observability.NewMockOBSERVABILITYSERVER(mockCtrl)
 	observability.EXPECT().StartServer(gomock.Any()).Times(1).DoAndReturn(
-		func(context context.Context, cfg *config.Config) error {
+		func(context context.Context) error {
 			return fmt.Errorf(errorMsg)
 		})
 
