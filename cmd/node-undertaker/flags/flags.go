@@ -10,7 +10,6 @@ const (
 	LogLevelFlag      = "log-level"
 	CloudProviderFlag = "cloud-provider"
 	AwsSqsUrlFlag     = "aws-sqs-url"
-	AwsRegionFlag     = "aws-region"
 	DrainTimeoutFlag  = "drain-timeout"
 	PortFlag          = "port"
 )
@@ -31,11 +30,7 @@ func SetupFlags(cmd *cobra.Command) error {
 	if err != nil {
 		panic(err)
 	}
-	cmd.PersistentFlags().String(AwsRegionFlag, "", "Aws region. Default is empty - means autodetect from IMDS. Can be set using AWS_REGION env variable")
-	err = viper.BindPFlag(AwsRegionFlag, cmd.PersistentFlags().Lookup(AwsRegionFlag))
-	if err != nil {
-		panic(err)
-	}
+
 	cmd.PersistentFlags().Int(DrainTimeoutFlag, 180, "Timeout of node drain. Can be set using DRAIN_TIMEOUT env variable")
 	err = viper.BindPFlag(DrainTimeoutFlag, cmd.PersistentFlags().Lookup(DrainTimeoutFlag))
 	if err != nil {

@@ -15,23 +15,26 @@ import (
 )
 
 func TestGetCloudProviderNoProvider(t *testing.T) {
-	cloudProvider, err := getCloudProvider()
+	ctx := context.TODO()
+	cloudProvider, err := getCloudProvider(ctx)
 
 	assert.Nil(t, cloudProvider)
 	assert.Error(t, err)
 }
 
 func TestGetCloudProviderUnknownProvider(t *testing.T) {
+	ctx := context.TODO()
 	viper.Set("cloud-provider", "unknown")
-	cloudProvider, err := getCloudProvider()
+	cloudProvider, err := getCloudProvider(ctx)
 
 	assert.Nil(t, cloudProvider)
 	assert.Error(t, err)
 }
 
 func TestGetCloudProviderOk(t *testing.T) {
+	ctx := context.TODO()
 	viper.Set("cloud-provider", "aws")
-	cloudProvider, err := getCloudProvider()
+	cloudProvider, err := getCloudProvider(ctx)
 
 	assert.NotNil(t, cloudProvider)
 	assert.NoError(t, err)

@@ -16,15 +16,17 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// Execute executes node-undertaker logic
 func Execute() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// initialize config
 	cfg, err := config.GetConfig()
 	if err != nil {
 		return err
 	}
-	cloudProvider, err := getCloudProvider()
+	cloudProvider, err := getCloudProvider(ctx)
 	if err != nil {
 		return err
 	}
@@ -34,16 +36,19 @@ func Execute() error {
 	}
 	cfg.CloudProvider = cloudProvider
 
+	// k8s node provider
 	nodeProvider, err := getNodeProvider(cfg)
 	if err != nil {
 		return err
 	}
 	cfg.NodeProvider = nodeProvider
 
+	// workload processors
 	var nodeHealthNotificationHandler nodehealthnotificationhandler.NODEHEALTHNOTIFICATIONHANDLER = nodehealthnotificationhandler.DefaultNodeHealthNotificationHandler{}
 
 	var k8sNodeInformer k8snodeinformer.K8SNODEINFORMER = k8snodeinformer.DefaultK8sNodeInformer{}
 
+	//observability (logging & monitoring http server setup)
 	observabilityServer := observability.GetDefaultObservabilityServer(cfg)
 	observabilityServer.SetupRoutes()
 
@@ -53,7 +58,7 @@ func Execute() error {
 	// start logic
 	err = startLogic(ctx, cfg, nodeHealthNotificationHandler, k8sNodeInformer, observabilityServer)
 	if err != nil {
-		log.Errorf("Program couldn't start properly")
+		log.Errorf("couldn't start properly")
 	}
 	return nil
 }
@@ -66,11 +71,11 @@ func startLogic(ctx context.Context, cfg *config.Config, nodeHealthHandler nodeh
 	return g.Wait()
 }
 
-func getCloudProvider() (cloudproviders.CloudProvider, error) {
+func getCloudProvider(ctx context.Context) (cloudproviders.CloudProvider, error) {
 	switch cloudProviderName := viper.GetString(flags.CloudProviderFlag); cloudProviderName {
 	case "aws":
-		cloudProvider := aws.CreateAwsCloudProvider()
-		return cloudProvider, nil
+		cloudProvider, err := aws.CreateAwsCloudProvider(ctx)
+		return cloudProvider, err
 
 	default:
 		return nil, fmt.Errorf("Unknown cloud provider: %s", cloudProviderName)
