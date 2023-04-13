@@ -11,6 +11,7 @@ import (
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodehealthnotificationhandler"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 )
@@ -43,24 +44,25 @@ func Execute() error {
 
 	var k8sNodeInformer k8snodeinformer.K8SNODEINFORMER = k8snodeinformer.DefaultK8sNodeInformer{}
 
+	observabilityServer := observability.GetDefaultObservabilityServer(cfg)
+	observabilityServer.SetupRoutes()
+
 	// do more init
 	//cloud provider clients
 	//k8s clientset
 	// start logic
-	startLogic(ctx, cfg, nodeHealthNotificationHandler, k8sNodeInformer)
-
-	err = observability.StartServer(cfg)
+	err = startLogic(ctx, cfg, nodeHealthNotificationHandler, k8sNodeInformer, observabilityServer)
 	if err != nil {
-		return err
+		log.Errorf("Program couldn't start properly")
 	}
-
 	return nil
 }
 
-func startLogic(ctx context.Context, cfg *config.Config, nodeHealthHandler nodehealthnotificationhandler.NODEHEALTHNOTIFICATIONHANDLER, nodeInformer k8snodeinformer.K8SNODEINFORMER) error {
+func startLogic(ctx context.Context, cfg *config.Config, nodeHealthHandler nodehealthnotificationhandler.NODEHEALTHNOTIFICATIONHANDLER, nodeInformer k8snodeinformer.K8SNODEINFORMER, observabilityserver observability.OBSERVABILITYSERVER) error {
 	g, ctx := errgroup.WithContext(ctx)
 	g.Go(func() error { return nodeHealthHandler.HandleHealthMessages(ctx, cfg) })
 	g.Go(func() error { return nodeInformer.StartInformer(ctx, cfg) })
+	g.Go(func() error { return observabilityserver.StartServer(ctx) })
 	return g.Wait()
 }
 

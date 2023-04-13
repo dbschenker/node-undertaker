@@ -6,6 +6,7 @@ import (
 	mock_k8snodeinformer "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/k8snodeinformer/mocks"
 	mockNHNH "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodehealthnotificationhandler/mocks"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
+	mock_observability "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -40,6 +41,7 @@ func TestStartLogicOk(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	nodeHealthNotificationHandler := mockNHNH.NewMockNODEHEALTHNOTIFICATIONHANDLER(mockCtrl)
+	errorMsg := "Error happened"
 
 	nodeHealthNotificationHandler.EXPECT().HandleHealthMessages(gomock.Any(), gomock.Any()).Times(1).DoAndReturn(
 		func(context context.Context, cfg *config.Config) error {
@@ -56,7 +58,18 @@ func TestStartLogicOk(t *testing.T) {
 		func(context context.Context, cfg *config.Config) error {
 			select {
 			case <-context.Done():
-				return fmt.Errorf("finished with error")
+				return fmt.Errorf(errorMsg)
+			case <-time.After(1 * time.Second):
+				return nil
+			}
+		})
+
+	observability := mock_observability.NewMockOBSERVABILITYSERVER(mockCtrl)
+	observability.EXPECT().StartServer(gomock.Any()).Times(1).DoAndReturn(
+		func(context context.Context, cfg *config.Config) error {
+			select {
+			case <-context.Done():
+				return fmt.Errorf(errorMsg)
 			case <-time.After(1 * time.Second):
 				return nil
 			}
@@ -64,7 +77,7 @@ func TestStartLogicOk(t *testing.T) {
 
 	ctx := context.TODO()
 	cfg := config.Config{}
-	res := startLogic(ctx, &cfg, nodeHealthNotificationHandler, k8sNodeInformer)
+	res := startLogic(ctx, &cfg, nodeHealthNotificationHandler, k8sNodeInformer, observability)
 	assert.NoError(t, res)
 }
 
@@ -91,12 +104,18 @@ func TestStartLogicNok(t *testing.T) {
 			return fmt.Errorf(errorMsg)
 		})
 
+	observability := mock_observability.NewMockOBSERVABILITYSERVER(mockCtrl)
+	observability.EXPECT().StartServer(gomock.Any()).Times(1).DoAndReturn(
+		func(context context.Context, cfg *config.Config) error {
+			return fmt.Errorf(errorMsg)
+		})
+
 	ctx := context.TODO()
 	cfg := config.Config{}
 	var res error
 	assert.NotPanics(t,
 		func() {
-			res = startLogic(ctx, &cfg, nodeHealthNotificationHandler, k8sNodeInformer)
+			res = startLogic(ctx, &cfg, nodeHealthNotificationHandler, k8sNodeInformer, observability)
 		},
 	)
 	assert.EqualError(t, res, errorMsg)
