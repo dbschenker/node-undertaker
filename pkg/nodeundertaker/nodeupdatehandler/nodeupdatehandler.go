@@ -12,7 +12,7 @@ import (
 
 func OnNodeUpdate(ctx context.Context, cfg *config.Config, node *v1.Node) {
 	if !nodeIsGrownUp(cfg, node) {
-		log.Infof("Node %s is not old enough", node.ObjectMeta.Name)
+		log.Infof("Node %s is not old enough - might be not fully initialized.", node.ObjectMeta.Name)
 		return
 	}
 
