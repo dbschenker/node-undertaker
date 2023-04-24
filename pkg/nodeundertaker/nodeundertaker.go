@@ -48,15 +48,6 @@ func Execute() error {
 	}
 	cfg.K8sClient = k8sClient
 	// informer handler funcs
-	handlerFuncs := cache.ResourceEventHandlerFuncs{
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			nodeupdatehandler.OnNodeUpdate(newObj)
-		},
-		AddFunc: func(obj interface{}) {
-			nodeupdatehandler.OnNodeUpdate(obj)
-		},
-		DeleteFunc: nil,
-	}
 
 	//observability (logging & monitoring http server setup)
 	observabilityServer := observability.GetDefaultObservabilityServer(cfg)
@@ -65,7 +56,7 @@ func Execute() error {
 	//cloud provider clients
 
 	// start logic
-	err = startLogic(ctx, cfg, handlerFuncs, observabilityServer)
+	err = startLogic(ctx, cfg, nodeupdatehandler.GetDefaultUpdateHandlerFuncs(), observabilityServer)
 	if err != nil {
 		log.Errorf("couldn't start properly")
 	}
