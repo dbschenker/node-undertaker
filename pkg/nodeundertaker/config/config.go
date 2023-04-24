@@ -5,6 +5,8 @@ import (
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/cmd/node-undertaker/flags"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders"
 	"github.com/spf13/viper"
+	"k8s.io/client-go/kubernetes"
+	"time"
 )
 
 type Config struct {
@@ -12,6 +14,8 @@ type Config struct {
 	DrainDelay            int
 	CloudTerminationDelay int
 	Port                  int
+	K8sClient             kubernetes.Interface
+	InformerResync        time.Duration
 }
 
 func GetConfig() (*Config, error) {
