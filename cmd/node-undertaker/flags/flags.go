@@ -12,6 +12,7 @@ const (
 	DrainDelayFlag            = "drain-delay"
 	CloudTerminationDelayFlag = "cloud-termination-delay"
 	PortFlag                  = "port"
+	NodeInitialThresholdFlag  = "node-initial-threshold"
 )
 
 func SetupFlags(cmd *cobra.Command) error {
@@ -32,6 +33,11 @@ func SetupFlags(cmd *cobra.Command) error {
 	}
 	cmd.PersistentFlags().Int(CloudTerminationDelayFlag, 300, "Terminate unhealthy node after number of seconds after starting drain (env: CLOUD_TERMINATION_DELAY)")
 	err = viper.BindPFlag(CloudTerminationDelayFlag, cmd.PersistentFlags().Lookup(CloudTerminationDelayFlag))
+	cmd.PersistentFlags().Int(NodeInitialThresholdFlag, 120, "Node is skipped until this number of seconds passes since creation (env: NODE_INITIAL_THRESHOLD)")
+	err = viper.BindPFlag(NodeInitialThresholdFlag, cmd.PersistentFlags().Lookup(NodeInitialThresholdFlag))
+	if err != nil {
+		panic(err)
+	}
 
 	if err != nil {
 		panic(err)

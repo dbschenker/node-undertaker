@@ -56,7 +56,7 @@ func Execute() error {
 	//cloud provider clients
 
 	// start logic
-	err = startLogic(ctx, cfg, nodeupdatehandler.GetDefaultUpdateHandlerFuncs(), observabilityServer)
+	err = startLogic(ctx, cfg, nodeupdatehandler.GetDefaultUpdateHandlerFuncs(ctx, cfg), observabilityServer)
 	if err != nil {
 		log.Errorf("couldn't start properly")
 	}

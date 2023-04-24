@@ -50,6 +50,17 @@ func TestValidateConfigErrCloudTerminationDelay(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestValidateConfigErrNodeInitialThreshold(t *testing.T) {
+	cfg := &Config{
+		DrainDelay:            1,
+		CloudTerminationDelay: 1,
+		NodeInitialThreshold:  -1,
+		Port:                  8080,
+	}
+	err := validateConfig(cfg)
+	assert.Error(t, err)
+}
+
 func TestValidateConfigErrPort(t *testing.T) {
 	cfg := &Config{
 		DrainDelay:            1,

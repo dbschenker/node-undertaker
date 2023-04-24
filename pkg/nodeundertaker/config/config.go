@@ -13,6 +13,7 @@ type Config struct {
 	CloudProvider         cloudproviders.CloudProvider
 	DrainDelay            int
 	CloudTerminationDelay int
+	NodeInitialThreshold  int
 	Port                  int
 	K8sClient             kubernetes.Interface
 	InformerResync        time.Duration
@@ -33,6 +34,10 @@ func validateConfig(cfg *Config) error {
 	if cfg.CloudTerminationDelay < 0 {
 		return fmt.Errorf("%s can't be lower than zero", flags.CloudTerminationDelayFlag)
 	}
+	if cfg.NodeInitialThreshold < 0 {
+		return fmt.Errorf("%s can't be lower than zero", flags.NodeInitialThresholdFlag)
+	}
+
 	if cfg.Port <= 0 {
 		return fmt.Errorf("%s can't be lower or equal than zero", flags.PortFlag)
 	}
