@@ -7,11 +7,11 @@ import (
 )
 
 const (
-	LogLevelFlag      = "log-level"
-	CloudProviderFlag = "cloud-provider"
-	AwsSqsUrlFlag     = "aws-sqs-url"
-	DrainTimeoutFlag  = "drain-timeout"
-	PortFlag          = "port"
+	LogLevelFlag              = "log-level"
+	CloudProviderFlag         = "cloud-provider"
+	DrainDelayFlag            = "drain-delay"
+	CloudTerminationDelayFlag = "cloud-termination-delay"
+	PortFlag                  = "port"
 )
 
 func SetupFlags(cmd *cobra.Command) error {
@@ -25,14 +25,14 @@ func SetupFlags(cmd *cobra.Command) error {
 	if err != nil {
 		panic(err)
 	}
-	cmd.PersistentFlags().String(AwsSqsUrlFlag, "", "Url for AWS SQS (in case cloud-provider=aws). Can be set using AWS_SQS_URL env variable")
-	err = viper.BindPFlag(AwsSqsUrlFlag, cmd.PersistentFlags().Lookup(AwsSqsUrlFlag))
+	cmd.PersistentFlags().Int(DrainDelayFlag, 300, "Drain unhealthy node after number of seconds after observed unhealthy (env: DRAIN_DELAY)")
+	err = viper.BindPFlag(DrainDelayFlag, cmd.PersistentFlags().Lookup(DrainDelayFlag))
 	if err != nil {
 		panic(err)
 	}
+	cmd.PersistentFlags().Int(CloudTerminationDelayFlag, 300, "Terminate unhealthy node after number of seconds after starting drain (env: CLOUD_TERMINATION_DELAY)")
+	err = viper.BindPFlag(CloudTerminationDelayFlag, cmd.PersistentFlags().Lookup(CloudTerminationDelayFlag))
 
-	cmd.PersistentFlags().Int(DrainTimeoutFlag, 180, "Timeout of node drain. Can be set using DRAIN_TIMEOUT env variable")
-	err = viper.BindPFlag(DrainTimeoutFlag, cmd.PersistentFlags().Lookup(DrainTimeoutFlag))
 	if err != nil {
 		panic(err)
 	}

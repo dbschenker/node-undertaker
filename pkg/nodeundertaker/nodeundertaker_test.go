@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	mock_k8snodeinformer "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/k8snodeinformer/mocks"
-	mockNHNH "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodehealthnotificationhandler/mocks"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	mock_observability "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability/mocks"
 	"github.com/golang/mock/gomock"
@@ -43,18 +42,7 @@ func TestGetCloudProviderOk(t *testing.T) {
 func TestStartLogicOk(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	nodeHealthNotificationHandler := mockNHNH.NewMockNODEHEALTHNOTIFICATIONHANDLER(mockCtrl)
 	errorMsg := "Error happened"
-
-	nodeHealthNotificationHandler.EXPECT().HandleHealthMessages(gomock.Any(), gomock.Any()).Times(1).DoAndReturn(
-		func(context context.Context, cfg *config.Config) error {
-			select {
-			case <-context.Done():
-				return fmt.Errorf("finished with error")
-			case <-time.After(1 * time.Second):
-				return nil
-			}
-		})
 
 	k8sNodeInformer := mock_k8snodeinformer.NewMockK8SNODEINFORMER(mockCtrl)
 	k8sNodeInformer.EXPECT().StartInformer(gomock.Any(), gomock.Any()).Times(1).DoAndReturn(
@@ -80,24 +68,13 @@ func TestStartLogicOk(t *testing.T) {
 
 	ctx := context.TODO()
 	cfg := config.Config{}
-	res := startLogic(ctx, &cfg, nodeHealthNotificationHandler, k8sNodeInformer, observability)
+	res := startLogic(ctx, &cfg, k8sNodeInformer, observability)
 	assert.NoError(t, res)
 }
 
 func TestStartLogicNok(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	nodeHealthNotificationHandler := mockNHNH.NewMockNODEHEALTHNOTIFICATIONHANDLER(mockCtrl)
-
-	nodeHealthNotificationHandler.EXPECT().HandleHealthMessages(gomock.Any(), gomock.Any()).Times(1).DoAndReturn(
-		func(context context.Context, cfg *config.Config) error {
-			select {
-			case <-context.Done():
-				return fmt.Errorf("terminated prepaturely")
-			case <-time.After(10 * time.Second):
-				panic("shouldn't happen")
-			}
-		})
 
 	errorMsg := "Error happened"
 
@@ -118,7 +95,7 @@ func TestStartLogicNok(t *testing.T) {
 	var res error
 	assert.NotPanics(t,
 		func() {
-			res = startLogic(ctx, &cfg, nodeHealthNotificationHandler, k8sNodeInformer, observability)
+			res = startLogic(ctx, &cfg, k8sNodeInformer, observability)
 		},
 	)
 	assert.EqualError(t, res, errorMsg)

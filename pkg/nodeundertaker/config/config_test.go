@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetConfigNegativeValidation(t *testing.T) {
-	viper.Set(flags.DrainTimeoutFlag, -1)
+	viper.Set(flags.DrainDelayFlag, -1)
 	_, err := GetConfig()
 	assert.Error(t, err)
 }
@@ -22,17 +22,29 @@ func TestGetConfigOk(t *testing.T) {
 
 func TestValidateConfigOk(t *testing.T) {
 	cfg := &Config{
-		DrainTimeout: 1,
-		Port:         8080,
+		DrainDelay:            1,
+		CloudTerminationDelay: 1,
+		Port:                  8080,
 	}
 	err := validateConfig(cfg)
 	assert.NoError(t, err)
 }
 
-func TestValidateConfigErrDrainTimeout(t *testing.T) {
+func TestValidateConfigErrDrainDelay(t *testing.T) {
 	cfg := &Config{
-		DrainTimeout: -1,
-		Port:         8080,
+		DrainDelay:            -1,
+		CloudTerminationDelay: 1,
+		Port:                  8080,
+	}
+	err := validateConfig(cfg)
+	assert.Error(t, err)
+}
+
+func TestValidateConfigErrCloudTerminationDelay(t *testing.T) {
+	cfg := &Config{
+		DrainDelay:            1,
+		CloudTerminationDelay: -1,
+		Port:                  8080,
 	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)
@@ -40,8 +52,9 @@ func TestValidateConfigErrDrainTimeout(t *testing.T) {
 
 func TestValidateConfigErrPort(t *testing.T) {
 	cfg := &Config{
-		DrainTimeout: 1,
-		Port:         0,
+		DrainDelay:            1,
+		CloudTerminationDelay: 1,
+		Port:                  0,
 	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)
