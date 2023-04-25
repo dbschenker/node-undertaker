@@ -3,19 +3,30 @@ package nodeupdatehandler
 import (
 	"context"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/node"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	"time"
 )
 
-func OnNodeUpdate(ctx context.Context, cfg *config.Config, node *v1.Node) {
-	if !nodeIsGrownUp(cfg, node) {
-		log.Infof("Node %s is not old enough - might be not fully initialized.", node.ObjectMeta.Name)
+func OnNodeUpdate(ctx context.Context, cfg *config.Config, n *v1.Node) {
+	node := node.CreateNode(n)
+
+	if !node.IsGrownUp(cfg) {
+		log.Debugf("Node %s is not old enough - might be not fully initialized.", node.ObjectMeta.Name)
 		return
 	}
-
+	if node.HasFreshLease(cfg) {
+		if node.GetLabel() != "" {
+			//untaint
+			// remove annotation
+			// remove label
+		}
+	} else { // node has old lease
+		//label := node.GetLabel()
+		//timestamp := getNodeActionTimestamp(cfg, node)
+	}
 }
 
 func GetDefaultUpdateHandlerFuncs(ctx context.Context, cfg *config.Config) cache.ResourceEventHandlerFuncs {
@@ -30,9 +41,14 @@ func GetDefaultUpdateHandlerFuncs(ctx context.Context, cfg *config.Config) cache
 	}
 }
 
-// nodeIsGrownUp checks if the node is older than NodeInitialThreshold
-func nodeIsGrownUp(cfg *config.Config, node *v1.Node) bool {
-	creationTime := node.ObjectMeta.CreationTimestamp
-	before := metav1.NewTime(time.Now().Add(-time.Second * time.Duration(cfg.NodeInitialThreshold)))
-	return creationTime.Before(&before)
+func nodeHasFreshLease(cfg *config.Config, node *v1.Node) bool {
+	return false
+}
+
+func getNodeLabel(cfg *config.Config, node *v1.Node) string {
+	return ""
+}
+
+func getNodeActionTimestamp(cfg *config.Config, node *v1.Node) time.Time {
+	return time.Now()
 }
