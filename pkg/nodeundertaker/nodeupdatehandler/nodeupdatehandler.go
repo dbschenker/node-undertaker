@@ -3,7 +3,7 @@ package nodeupdatehandler
 import (
 	"context"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
-	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/node"
+	nodepkg "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/node"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
@@ -11,7 +11,7 @@ import (
 )
 
 func OnNodeUpdate(ctx context.Context, cfg *config.Config, n *v1.Node) {
-	node := node.CreateNode(n)
+	node := nodepkg.CreateNode(n)
 
 	if !node.IsGrownUp(cfg) {
 		log.Debugf("Node %s is not old enough - might be not fully initialized.", node.ObjectMeta.Name)
@@ -23,7 +23,29 @@ func OnNodeUpdate(ctx context.Context, cfg *config.Config, n *v1.Node) {
 		return
 	}
 	if fresh {
+		switch label := node.GetLabel(); label {
+		case nodepkg.NodeHealthy:
+			panic("TODO")
+		case nodepkg.NodeUnhealthy:
+			panic("TODO")
+		case nodepkg.NodeTainted:
+			panic("TODO")
+		case nodepkg.NodeDraining:
+			panic("TODO")
+		default:
+			log.Errorf("Unknown node label: %s for node %s", label, node.ObjectMeta.Name)
+			return
+		}
+
 		if node.GetLabel() != "" {
+			node.Untaint()
+			node.RemoveActionTimestamp()
+			node.RemoveLabel()
+			err := node.Save(ctx, cfg)
+			if err != nil {
+				log.Errorf("Received error while saving node %s: %v", node.ObjectMeta.Name, err)
+				return
+			}
 			//untaint
 			// remove annotation
 			// remove label

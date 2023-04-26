@@ -489,3 +489,75 @@ func TestHasFreshLeaseNolease(t *testing.T) {
 	assert.NoError(t, err)
 	assert.False(t, ret)
 }
+
+func TestRemoveLabelOk(t *testing.T) {
+	v1node := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "dummy",
+			Labels: map[string]string{
+				Label: "old-value",
+			},
+		},
+	}
+	n := CreateNode(&v1node)
+	n.RemoveLabel()
+
+	ret, exists := n.ObjectMeta.Labels[Label]
+	assert.Equal(t, "", ret)
+	assert.False(t, exists)
+	assert.True(t, n.changed)
+}
+
+func TestRemoveLabelNotExisting(t *testing.T) {
+	v1node := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "dummy",
+			Labels: map[string]string{
+				"test": "old-value",
+			},
+		},
+	}
+	n := CreateNode(&v1node)
+	n.RemoveLabel()
+
+	ret, exists := n.ObjectMeta.Labels[Label]
+	assert.Equal(t, "", ret)
+	assert.False(t, exists)
+	assert.False(t, n.changed)
+}
+
+func TestRemoveActionTimestampOk(t *testing.T) {
+	v1node := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "dummy",
+			Annotations: map[string]string{
+				TimestampAnnotation: "old-value",
+			},
+		},
+	}
+	n := CreateNode(&v1node)
+	n.RemoveActionTimestamp()
+
+	ret, exists := n.ObjectMeta.Annotations[TimestampAnnotation]
+	assert.Equal(t, "", ret)
+	assert.False(t, exists)
+	assert.True(t, n.changed)
+}
+
+func TestRemoveActionTimestampNotExisting(t *testing.T) {
+	v1node := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "dummy",
+			Annotations: map[string]string{
+				"test": "old-value",
+			},
+		},
+	}
+	n := CreateNode(&v1node)
+	n.RemoveActionTimestamp()
+
+	ret, exists := n.ObjectMeta.Annotations[TimestampAnnotation]
+	assert.Equal(t, "", ret)
+	assert.False(t, exists)
+	assert.False(t, n.changed)
+}

@@ -19,6 +19,13 @@ const (
 	TimestampAnnotation = "dbschenker.com/node-undertaker/timestamp"
 )
 
+const (
+	NodeUnhealthy string = "unhealthy"
+	NodeDraining         = "draining"
+	NodeTainted          = "tainted"
+	NodeHealthy          = ""
+)
+
 type Node struct {
 	*v1.Node
 	changed bool
@@ -60,6 +67,20 @@ func (n Node) GetLabel() string {
 		return val
 	}
 	return ""
+}
+
+func (n *Node) RemoveLabel() {
+	if _, found := n.ObjectMeta.Labels[Label]; found {
+		delete(n.ObjectMeta.Labels, Label)
+		n.changed = true
+	}
+}
+
+func (n *Node) RemoveActionTimestamp() {
+	if _, found := n.ObjectMeta.Annotations[TimestampAnnotation]; found {
+		delete(n.ObjectMeta.Annotations, TimestampAnnotation)
+		n.changed = true
+	}
 }
 
 func (n *Node) SetLabel(label string) {
@@ -115,7 +136,7 @@ func (n *Node) Untaint() {
 }
 
 func (n Node) Drain() {
-
+	panic("not implemented")
 }
 
 // Terminate deletes node from cloud provider
