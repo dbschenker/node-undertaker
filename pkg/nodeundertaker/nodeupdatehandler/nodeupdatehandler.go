@@ -17,26 +17,15 @@ func OnNodeUpdate(ctx context.Context, cfg *config.Config, n *v1.Node) {
 		log.Debugf("Node %s is not old enough - might be not fully initialized.", node.ObjectMeta.Name)
 		return
 	}
+
+	// check if lease is fresh
 	fresh, err := node.HasFreshLease(ctx, cfg)
 	if err != nil {
 		log.Errorf("Node %s update failed: %v", node.ObjectMeta.Name, err)
 		return
 	}
-	if fresh {
-		switch label := node.GetLabel(); label {
-		case nodepkg.NodeHealthy:
-			panic("TODO")
-		case nodepkg.NodeUnhealthy:
-			panic("TODO")
-		case nodepkg.NodeTainted:
-			panic("TODO")
-		case nodepkg.NodeDraining:
-			panic("TODO")
-		default:
-			log.Errorf("Unknown node label: %s for node %s", label, node.ObjectMeta.Name)
-			return
-		}
 
+	if fresh {
 		if node.GetLabel() != "" {
 			node.Untaint()
 			node.RemoveActionTimestamp()
@@ -46,13 +35,31 @@ func OnNodeUpdate(ctx context.Context, cfg *config.Config, n *v1.Node) {
 				log.Errorf("Received error while saving node %s: %v", node.ObjectMeta.Name, err)
 				return
 			}
-			//untaint
-			// remove annotation
-			// remove label
+			//TODO produce event
 		}
 	} else { // node has old lease
-		//label := node.GetLabel()
-		//timestamp := getNodeActionTimestamp(cfg, node)
+		switch label := node.GetLabel(); label {
+		case nodepkg.NodeHealthy:
+			//TODO produce event
+			panic("TODO")
+		case nodepkg.NodeUnhealthy:
+			//TODO produce event
+			panic("TODO")
+		case nodepkg.NodeTainted:
+			//TODO produce event
+			panic("TODO")
+		case nodepkg.NodeDraining:
+			// check last action timestamp
+			err := node.Terminate(ctx, cfg)
+			if err != nil {
+
+			}
+			//TODO produce event
+			panic("TODO")
+		default:
+			log.Errorf("Unknown node label: %s for node %s", label, node.ObjectMeta.Name)
+			return
+		}
 	}
 }
 
