@@ -17,7 +17,7 @@ import (
 
 func TestNodeIsGrownUp(t *testing.T) {
 	cfg := config.Config{NodeInitialThreshold: 5}
-	creationTime := metav1.Now().Add(-20 * time.Second)
+	creationTime := metav1.Now().Add(-20 * time.Second).UTC()
 
 	v1node := v1.Node{
 		ObjectMeta: metav1.ObjectMeta{
@@ -328,7 +328,7 @@ func TestSetActionTimestampNone(t *testing.T) {
 
 func TestSetActionTimestampExists(t *testing.T) {
 	nodeName := "node1"
-	tnow := time.Now().Truncate(time.Second)
+	tnow := time.Now().Truncate(time.Second).UTC()
 	ti := tnow.Format(time.RFC3339)
 	nodev1 := v1.Node{
 		ObjectMeta: metav1.ObjectMeta{
