@@ -70,7 +70,3 @@ func TestValidateConfigErrPort(t *testing.T) {
 	err := validateConfig(cfg)
 	assert.Error(t, err)
 }
-
-//func TestAutodetectNamespace(t *testing.T) {
-//
-//}

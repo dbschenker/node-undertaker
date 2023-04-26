@@ -17,7 +17,12 @@ func OnNodeUpdate(ctx context.Context, cfg *config.Config, n *v1.Node) {
 		log.Debugf("Node %s is not old enough - might be not fully initialized.", node.ObjectMeta.Name)
 		return
 	}
-	if node.HasFreshLease(cfg) {
+	fresh, err := node.HasFreshLease(ctx, cfg)
+	if err != nil {
+		log.Errorf("Node %s update failed: %v", node.ObjectMeta.Name, err)
+		return
+	}
+	if fresh {
 		if node.GetLabel() != "" {
 			//untaint
 			// remove annotation

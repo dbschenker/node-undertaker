@@ -22,28 +22,14 @@ type Config struct {
 
 func GetConfig() (*Config, error) {
 	ret := Config{}
-	//var err error = nil
 	ret.DrainDelay = viper.GetInt(flags.DrainDelayFlag)
 	ret.CloudTerminationDelay = viper.GetInt(flags.CloudTerminationDelayFlag)
 	ret.Port = viper.GetInt(flags.PortFlag)
 	namespace := viper.GetString(flags.NamespaceFlag)
-	//if namespace == "" {
-	//	namespace, err = autodetectNamespace()
-	//	if err != nil {
-	//		return &ret, err
-	//	}
-	//}
 
 	ret.Namespace = namespace
 	return &ret, validateConfig(&ret)
 }
-
-//
-//func autodetectNamespace() (string, error) {
-//	data, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
-//
-//	return "TODO"
-//}
 
 func validateConfig(cfg *Config) error {
 	if cfg.DrainDelay < 0 {

@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
+	log "github.com/sirupsen/logrus"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 )
@@ -30,9 +32,6 @@ func CreateNode(n *v1.Node) *Node {
 	if node.Labels == nil {
 		node.Labels = make(map[string]string)
 	}
-	//if node.Node.Spec.Taints == nil {
-	//	node.Labels = make(map[string]string)
-	//}
 	return &node
 }
 
@@ -42,8 +41,18 @@ func (n Node) IsGrownUp(cfg *config.Config) bool {
 	return creationTime.Before(&before)
 }
 
-func (n Node) HasFreshLease(cfg *config.Config) bool {
-	return false
+func (n Node) HasFreshLease(ctx context.Context, cfg *config.Config) (bool, error) {
+	lease, err := n.findLease(ctx, cfg)
+	if errors.IsNotFound(err) {
+		log.Warnf("lease not found for node %s: %v", n.Node.ObjectMeta.Name, err)
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	leaseDuration := time.Duration(*lease.Spec.LeaseDurationSeconds) * time.Second
+	isFresh := lease.Spec.RenewTime.Add(leaseDuration).After(time.Now())
+	return isFresh, nil
 }
 
 func (n Node) GetLabel() string {

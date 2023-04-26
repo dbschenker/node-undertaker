@@ -400,6 +400,92 @@ func TestFindLeaseMissing(t *testing.T) {
 	node := CreateNode(&nodev1)
 	leaseret, err := node.findLease(context.TODO(), &cfg)
 	assert.Error(t, err)
-	assert.Equal(t, errors.NewNotFound(coordinationv1.Resource("leases"), nodeName), err)
+	assert.Equal(t, metav1.StatusReasonNotFound, errors.ReasonForError(err))
 	assert.Nil(t, leaseret)
+}
+
+func TestHasFreshLeaseOk(t *testing.T) {
+	nodeName := "node1"
+	namespace := "example-lease-ns"
+	leaseDuration := int32(90)
+	renewTime := metav1.NewMicroTime(time.Now().Add(-10 * time.Second))
+
+	nodev1 := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+	}
+	lease := coordinationv1.Lease{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      nodeName,
+			Namespace: namespace,
+		},
+		Spec: coordinationv1.LeaseSpec{
+			LeaseDurationSeconds: &leaseDuration,
+			RenewTime:            &renewTime,
+		},
+	}
+	cfg := config.Config{
+		K8sClient: fake.NewSimpleClientset(),
+		Namespace: namespace,
+	}
+	_, err := cfg.K8sClient.CoordinationV1().Leases(namespace).Create(context.TODO(), &lease, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	node := CreateNode(&nodev1)
+	ret, err := node.HasFreshLease(context.TODO(), &cfg)
+
+	assert.NoError(t, err)
+	assert.True(t, ret)
+}
+
+func TestHasFreshLeaseNok(t *testing.T) {
+	nodeName := "node1"
+	namespace := "example-lease-ns"
+	leaseDuration := int32(90)
+	renewTime := metav1.NewMicroTime(time.Now().Add(-1000 * time.Second))
+
+	nodev1 := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+	}
+	lease := coordinationv1.Lease{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      nodeName,
+			Namespace: namespace,
+		},
+		Spec: coordinationv1.LeaseSpec{
+			LeaseDurationSeconds: &leaseDuration,
+			RenewTime:            &renewTime,
+		},
+	}
+	cfg := config.Config{
+		K8sClient: fake.NewSimpleClientset(),
+		Namespace: namespace,
+	}
+	_, err := cfg.K8sClient.CoordinationV1().Leases(namespace).Create(context.TODO(), &lease, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	node := CreateNode(&nodev1)
+	ret, err := node.HasFreshLease(context.TODO(), &cfg)
+
+	assert.NoError(t, err)
+	assert.False(t, ret)
+}
+
+func TestHasFreshLeaseNolease(t *testing.T) {
+	nodeName := "node1"
+	namespace := "example-lease-ns"
+
+	nodev1 := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+	}
+
+	cfg := config.Config{
+		K8sClient: fake.NewSimpleClientset(),
+		Namespace: namespace,
+	}
+
+	node := CreateNode(&nodev1)
+	ret, err := node.HasFreshLease(context.TODO(), &cfg)
+
+	assert.NoError(t, err)
+	assert.False(t, ret)
 }
