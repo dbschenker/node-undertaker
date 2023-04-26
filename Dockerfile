@@ -16,4 +16,4 @@ FROM --platform=$BUILDPLATFORM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/src/app/bin/* /
 
-ENTRYPOINT ["/etcd-orchestrator"]
+ENTRYPOINT ["/node-undertaker"]

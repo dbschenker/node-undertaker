@@ -5,7 +5,9 @@ import (
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	coordinationv1 "k8s.io/api/coordination/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 
@@ -326,7 +328,7 @@ func TestSetActionTimestampNone(t *testing.T) {
 
 func TestSetActionTimestampExists(t *testing.T) {
 	nodeName := "node1"
-	tnow := time.Now()
+	tnow := time.Now().Truncate(time.Second)
 	ti := tnow.Format(time.RFC3339)
 	nodev1 := v1.Node{
 		ObjectMeta: metav1.ObjectMeta{
@@ -356,4 +358,48 @@ func TestSetActionTimestampWrongFormat(t *testing.T) {
 	node := CreateNode(&nodev1)
 	_, err := node.GetActionTimestamp() // don't care about the date
 	assert.Error(t, err)
+}
+
+func TestFindLeaseOk(t *testing.T) {
+	nodeName := "node1"
+	namespace := "example-lease-ns"
+	nodev1 := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+	}
+	lease := coordinationv1.Lease{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      nodeName,
+			Namespace: namespace,
+		},
+	}
+	cfg := config.Config{
+		K8sClient: fake.NewSimpleClientset(),
+		Namespace: namespace,
+	}
+	_, err := cfg.K8sClient.CoordinationV1().Leases(namespace).Create(context.TODO(), &lease, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	node := CreateNode(&nodev1)
+	leaseret, err := node.findLease(context.TODO(), &cfg)
+	assert.NoError(t, err)
+	assert.Equal(t, lease, *leaseret)
+}
+
+func TestFindLeaseMissing(t *testing.T) {
+	nodeName := "node1"
+	namespace := "example-lease-ns"
+	nodev1 := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+	}
+
+	cfg := config.Config{
+		K8sClient: fake.NewSimpleClientset(),
+		Namespace: namespace,
+	}
+
+	node := CreateNode(&nodev1)
+	leaseret, err := node.findLease(context.TODO(), &cfg)
+	assert.Error(t, err)
+	assert.Equal(t, errors.NewNotFound(coordinationv1.Resource("leases"), nodeName), err)
+	assert.Nil(t, leaseret)
 }

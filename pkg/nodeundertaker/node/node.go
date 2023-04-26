@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
+	coordinationv1 "k8s.io/api/coordination/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
@@ -120,4 +121,8 @@ func (n Node) Save(ctx context.Context, cfg *config.Config) error {
 		return err
 	}
 	return nil
+}
+
+func (n Node) findLease(ctx context.Context, cfg *config.Config) (*coordinationv1.Lease, error) {
+	return cfg.K8sClient.CoordinationV1().Leases(cfg.Namespace).Get(ctx, n.ObjectMeta.Name, metav1.GetOptions{ResourceVersion: "0"})
 }

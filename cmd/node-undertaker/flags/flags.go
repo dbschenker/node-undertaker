@@ -13,6 +13,7 @@ const (
 	CloudTerminationDelayFlag = "cloud-termination-delay"
 	PortFlag                  = "port"
 	NodeInitialThresholdFlag  = "node-initial-threshold"
+	NamespaceFlag             = "namespace"
 )
 
 func SetupFlags(cmd *cobra.Command) error {
@@ -46,6 +47,11 @@ func SetupFlags(cmd *cobra.Command) error {
 	err = viper.BindPFlag(PortFlag, cmd.PersistentFlags().Lookup(PortFlag))
 	if err != nil {
 		panic(err)
+	}
+	cmd.PersistentFlags().String(NamespaceFlag, "", "Namespace containing leases. Default: '' - which is the same namespace node-undertaker runs. Can be set using NAMESPACE env variable")
+	err = viper.BindPFlag(NamespaceFlag, cmd.PersistentFlags().Lookup(NamespaceFlag))
+	if err != nil {
+		return (err)
 	}
 	return nil
 }

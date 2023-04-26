@@ -42,18 +42,19 @@ func Execute() error {
 	cfg.CloudProvider = cloudProvider
 
 	// k8s ClientSet
-	k8sClient, err := kubeclient.GetClient()
+	k8sClient, namespace, err := kubeclient.GetClient()
 	if err != nil {
 		return err
 	}
 	cfg.K8sClient = k8sClient
-	// informer handler funcs
-
+	if cfg.Namespace == "" {
+		log.Infof("Using autodetected namespace: %s", namespace)
+		cfg.Namespace = namespace
+	}
+	log.Fatalf("namespace: %s", cfg.Namespace)
 	//observability (logging & monitoring http server setup)
 	observabilityServer := observability.GetDefaultObservabilityServer(cfg)
 	observabilityServer.SetupRoutes()
-
-	//cloud provider clients
 
 	// start logic
 	err = startLogic(ctx, cfg, nodeupdatehandler.GetDefaultUpdateHandlerFuncs(ctx, cfg), observabilityServer)
