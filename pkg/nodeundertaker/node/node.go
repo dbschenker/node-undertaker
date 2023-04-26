@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"fmt"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -56,15 +57,18 @@ func (n *Node) SetLabel(label string) {
 	n.changed = true
 }
 
-func (n Node) SetActionTimestamp() {
+func (n Node) SetActionTimestamp(t time.Time) {
 	n.changed = true
-	//TODO implement this
+	n.ObjectMeta.Annotations[TimestampAnnotation] = t.Format(time.RFC3339)
 	return
 }
 
-func (n Node) GetLastActionTimestamp() time.Time {
-	//TODO implement this
-	return time.Now()
+func (n Node) GetActionTimestamp() (time.Time, error) {
+	if val, ok := n.ObjectMeta.Annotations[TimestampAnnotation]; ok {
+		ret, err := time.Parse(time.RFC3339, val)
+		return ret, err
+	}
+	return time.Now(), fmt.Errorf("node %s doesn't have annotation: %s", n.ObjectMeta.Name, TimestampAnnotation)
 }
 
 func (n *Node) Taint() {

@@ -311,3 +311,49 @@ func TestUntaintExistingTaints(t *testing.T) {
 	assert.True(t, node.changed)
 	assert.NotContains(t, node.Spec.Taints, v1.Taint{Key: TaintKey, Value: TaintValue, Effect: v1.TaintEffectNoSchedule})
 }
+
+func TestSetActionTimestampNone(t *testing.T) {
+	nodeName := "node1"
+	nodev1 := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+	}
+	node := CreateNode(&nodev1)
+	tret, err := node.GetActionTimestamp()
+	assert.Error(t, err)
+	assert.True(t, tret.After(time.Now().Add(-time.Hour)))
+	assert.True(t, tret.Before(time.Now()))
+}
+
+func TestSetActionTimestampExists(t *testing.T) {
+	nodeName := "node1"
+	tnow := time.Now()
+	ti := tnow.Format(time.RFC3339)
+	nodev1 := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: nodeName,
+			Annotations: map[string]string{
+				TimestampAnnotation: ti,
+			},
+		},
+	}
+	node := CreateNode(&nodev1)
+	tret, err := node.GetActionTimestamp()
+	assert.NoError(t, err)
+	assert.Equal(t, tnow, tret)
+}
+
+func TestSetActionTimestampWrongFormat(t *testing.T) {
+	nodeName := "node1"
+	ti := "test string"
+	nodev1 := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: nodeName,
+			Annotations: map[string]string{
+				TimestampAnnotation: ti,
+			},
+		},
+	}
+	node := CreateNode(&nodev1)
+	_, err := node.GetActionTimestamp() // don't care about the date
+	assert.Error(t, err)
+}
