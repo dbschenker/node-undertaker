@@ -33,6 +33,7 @@ func OnNodeUpdate(ctx context.Context, cfg *config.Config, n *v1.Node) {
 			err := node.Save(ctx, cfg)
 			if err != nil {
 				log.Errorf("Received error while saving node %s: %v", node.ObjectMeta.Name, err)
+				//TODO produce event
 				return
 			}
 			//TODO produce event
@@ -52,12 +53,14 @@ func OnNodeUpdate(ctx context.Context, cfg *config.Config, n *v1.Node) {
 			// check last action timestamp
 			err := node.Terminate(ctx, cfg)
 			if err != nil {
-
+				log.Errorf("Termination of node %s failed due to: %v", node.ObjectMeta.Name, err)
+				//TODO produce event
 			}
+			log.Infof("Termination of node %s succeeded", node.ObjectMeta.Name)
 			//TODO produce event
-			panic("TODO")
 		default:
 			log.Errorf("Unknown node label: %s for node %s", label, node.ObjectMeta.Name)
+			//TODO produce event
 			return
 		}
 	}

@@ -51,7 +51,6 @@ func Execute() error {
 		log.Infof("Using autodetected namespace: %s", namespace)
 		cfg.Namespace = namespace
 	}
-	log.Fatalf("namespace: %s", cfg.Namespace)
 	//observability (logging & monitoring http server setup)
 	observabilityServer := observability.GetDefaultObservabilityServer(cfg)
 	observabilityServer.SetupRoutes()
