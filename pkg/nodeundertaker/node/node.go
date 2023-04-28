@@ -136,6 +136,7 @@ func (n *Node) Untaint() {
 }
 
 func (n Node) Drain() {
+	//https://github.com/aws/aws-node-termination-handler/blob/main/pkg/node/node.go#L106
 	panic("not implemented")
 }
 

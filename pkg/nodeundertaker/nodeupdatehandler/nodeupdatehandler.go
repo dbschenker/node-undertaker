@@ -2,6 +2,7 @@ package nodeupdatehandler
 
 import (
 	"context"
+	"fmt"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	nodepkg "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/node"
 	log "github.com/sirupsen/logrus"
@@ -10,58 +11,98 @@ import (
 	"time"
 )
 
-func OnNodeUpdate(ctx context.Context, cfg *config.Config, n *v1.Node) {
-	node := nodepkg.CreateNode(n)
+func OnNodeUpdate(ctx context.Context, cfg *config.Config, nv1 *v1.Node) {
+	n := nodepkg.CreateNode(nv1)
 
-	if !node.IsGrownUp(cfg) {
-		log.Debugf("Node %s is not old enough - might be not fully initialized.", node.ObjectMeta.Name)
+	if !n.IsGrownUp(cfg) {
+		log.Debugf("Node %s is not old enough - might be not fully initialized.", n.ObjectMeta.Name)
 		return
 	}
 
 	// check if lease is fresh
-	fresh, err := node.HasFreshLease(ctx, cfg)
+	fresh, err := n.HasFreshLease(ctx, cfg)
 	if err != nil {
-		log.Errorf("Node %s update failed: %v", node.ObjectMeta.Name, err)
+		log.Errorf("Node %s update failed: %v", n.ObjectMeta.Name, err)
 		return
 	}
 
 	if fresh {
-		if node.GetLabel() != "" {
-			node.Untaint()
-			node.RemoveActionTimestamp()
-			node.RemoveLabel()
-			err := node.Save(ctx, cfg)
+		if n.GetLabel() != "" {
+			n.Untaint()
+			n.RemoveActionTimestamp()
+			n.RemoveLabel()
+			err := n.Save(ctx, cfg)
 			if err != nil {
-				log.Errorf("Received error while saving node %s: %v", node.ObjectMeta.Name, err)
-				//TODO produce event
+				log.Errorf("Received error while saving node %s: %v", n.ObjectMeta.Name, err)
+				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "TaintRemoval", "Failed", err.Error(), "")
 				return
 			}
-			//TODO produce event
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "TaintRemoval", "Succeeded", "", "")
 		}
 	} else { // node has old lease
-		switch label := node.GetLabel(); label {
+		switch label := n.GetLabel(); label {
 		case nodepkg.NodeHealthy:
-			//TODO produce event
-			panic("TODO")
-		case nodepkg.NodeUnhealthy:
-			//TODO produce event
-			panic("TODO")
-		case nodepkg.NodeTainted:
-			//TODO produce event
-			panic("TODO")
-		case nodepkg.NodeDraining:
-			// check last action timestamp
-			err := node.Terminate(ctx, cfg)
+			n.SetLabel(nodepkg.NodeUnhealthy)
+			err := n.Save(ctx, cfg)
 			if err != nil {
-				log.Errorf("Termination of node %s failed due to: %v", node.ObjectMeta.Name, err)
-				//TODO produce event
+				log.Errorf("Received error while saving node %s: %v", n.ObjectMeta.Name, err)
+				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "LabeledUnhealthy", "Failed", err.Error(), "")
+				return
 			}
-			log.Infof("Termination of node %s succeeded", node.ObjectMeta.Name)
-			//TODO produce event
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "LabeledUnhealthy", "Succeeded", "", "")
+		case nodepkg.NodeUnhealthy:
+			n.Taint()
+			n.SetActionTimestamp(time.Now())
+			n.SetLabel(nodepkg.NodeTainted)
+			err := n.Save(ctx, cfg)
+			if err != nil {
+				log.Errorf("Received error while saving node %s: %v", n.ObjectMeta.Name, err)
+				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Tainted", "Failed", err.Error(), "")
+				return
+			}
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Tainted", "Succeeded", "", "")
+		case nodepkg.NodeTainted:
+			nodeModificationTimestamp, err := n.GetActionTimestamp()
+			if err != nil {
+				log.Errorf("Node %s: timestamp is not parsed properly: %v", n.ObjectMeta.Name, err)
+				return
+			}
+			timestampShouldBeBefore := time.Now().Add(time.Duration(cfg.DrainDelay) * time.Second)
+			if nodeModificationTimestamp.After(timestampShouldBeBefore) {
+				log.Infof("Node %s tainted too recently", n.ObjectMeta.Name)
+				return
+			}
+
+			n.Drain()
+			n.SetActionTimestamp(time.Now())
+			n.SetLabel(nodepkg.NodeDraining)
+			err = n.Save(ctx, cfg)
+			if err != nil {
+				log.Errorf("Received error while saving node %s: %v", n.ObjectMeta.Name, err)
+				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Drain", "Failed", err.Error(), "")
+				return
+			}
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Drain", "Started", "", "")
+
+		case nodepkg.NodeDraining:
+			nodeModificationTimestamp, err := n.GetActionTimestamp()
+			if err != nil {
+				log.Errorf("Node %s: timestamp is not parsed properly: %v", n.ObjectMeta.Name, err)
+				return
+			}
+			timestampShouldBeBefore := time.Now().Add(time.Duration(cfg.CloudTerminationDelay) * time.Second)
+			if nodeModificationTimestamp.After(timestampShouldBeBefore) {
+				log.Infof("Node %s tainted too recently", n.ObjectMeta.Name)
+				return
+			}
+
+			err = n.Terminate(ctx, cfg)
+			if err != nil {
+				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "CloudInstanceTermiantion", "Failed", err.Error(), "")
+			}
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "CloudInstanceTermiantion", "Succeeded", "", "")
 		default:
-			log.Errorf("Unknown node label: %s for node %s", label, node.ObjectMeta.Name)
-			//TODO produce event
-			return
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "NodeUpdate", "Failed", fmt.Sprintf("unknown label value found: %s", label), "")
 		}
 	}
 }

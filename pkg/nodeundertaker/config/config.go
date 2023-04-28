@@ -6,6 +6,7 @@ import (
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
+	"os"
 	"time"
 )
 
@@ -18,6 +19,7 @@ type Config struct {
 	K8sClient             kubernetes.Interface
 	InformerResync        time.Duration
 	Namespace             string
+	Hostname              string
 }
 
 func GetConfig() (*Config, error) {
@@ -26,6 +28,12 @@ func GetConfig() (*Config, error) {
 	ret.CloudTerminationDelay = viper.GetInt(flags.CloudTerminationDelayFlag)
 	ret.Port = viper.GetInt(flags.PortFlag)
 	namespace := viper.GetString(flags.NamespaceFlag)
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, err
+	}
+	ret.Hostname = hostname
 
 	ret.Namespace = namespace
 	return &ret, validateConfig(&ret)
