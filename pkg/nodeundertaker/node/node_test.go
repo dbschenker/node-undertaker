@@ -565,11 +565,11 @@ func TestRemoveActionTimestampNotExisting(t *testing.T) {
 
 func TestTerminate(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	ec2Client := mockcloudproviders.NewMockCLOUDPROVIDER(mockCtrl)
-	ec2Client.EXPECT().TerminateNode(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	cloudProvider := mockcloudproviders.NewMockCLOUDPROVIDER(mockCtrl)
+	cloudProvider.EXPECT().TerminateNode(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 	cfg := config.Config{
-		CloudProvider: ec2Client,
+		CloudProvider: cloudProvider,
 	}
 	v1node := v1.Node{
 		ObjectMeta: metav1.ObjectMeta{
@@ -577,5 +577,6 @@ func TestTerminate(t *testing.T) {
 		},
 	}
 	n := CreateNode(&v1node)
-	n.Terminate(context.TODO(), &cfg)
+	err := n.Terminate(context.TODO(), &cfg)
+	assert.NoError(t, err)
 }

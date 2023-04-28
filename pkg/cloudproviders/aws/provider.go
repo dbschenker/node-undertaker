@@ -35,9 +35,5 @@ func (p AwsCloudProvider) TerminateNode(ctx context.Context, cloudProviderNodeId
 
 	_, err = p.Ec2Client.TerminateInstances(ctx, &input)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
