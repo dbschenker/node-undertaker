@@ -11,7 +11,7 @@ import (
 )
 
 type Config struct {
-	CloudProvider         cloudproviders.CloudProvider
+	CloudProvider         cloudproviders.CLOUDPROVIDER
 	DrainDelay            int
 	CloudTerminationDelay int
 	NodeInitialThreshold  int

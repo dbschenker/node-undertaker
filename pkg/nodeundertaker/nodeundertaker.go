@@ -97,7 +97,7 @@ func startLogic(ctx context.Context, cfg *config.Config, handlerFuncs cache.Reso
 	return g.Wait()
 }
 
-func getCloudProvider(ctx context.Context) (cloudproviders.CloudProvider, error) {
+func getCloudProvider(ctx context.Context) (cloudproviders.CLOUDPROVIDER, error) {
 	switch cloudProviderName := viper.GetString(flags.CloudProviderFlag); cloudProviderName {
 	case "aws":
 		cloudProvider, err := aws.CreateAwsCloudProvider(ctx)

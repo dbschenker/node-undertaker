@@ -2,7 +2,9 @@ package node
 
 import (
 	"context"
+	mockcloudproviders "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders/mocks"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	coordinationv1 "k8s.io/api/coordination/v1"
@@ -10,7 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-
 	"testing"
 	"time"
 )
@@ -560,4 +561,21 @@ func TestRemoveActionTimestampNotExisting(t *testing.T) {
 	assert.Equal(t, "", ret)
 	assert.False(t, exists)
 	assert.False(t, n.changed)
+}
+
+func TestTerminate(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	ec2Client := mockcloudproviders.NewMockCLOUDPROVIDER(mockCtrl)
+	ec2Client.EXPECT().TerminateNode(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+
+	cfg := config.Config{
+		CloudProvider: ec2Client,
+	}
+	v1node := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "dummy",
+		},
+	}
+	n := CreateNode(&v1node)
+	n.Terminate(context.TODO(), &cfg)
 }
