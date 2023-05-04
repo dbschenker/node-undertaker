@@ -248,7 +248,6 @@ func TestNodeUpdateInternalUnhealthyDrainingLabelOld(t *testing.T) {
 	namespaceName := "dummy-ns"
 	hasFreshLease := false
 	var terminationErr error = nil
-	var saveErr error = nil
 	nodeLabel := nodepkg.NodeDraining
 	var hasFreshLeaseErr error = nil
 	var getTimestampErr error = nil
@@ -263,12 +262,9 @@ func TestNodeUpdateInternalUnhealthyDrainingLabelOld(t *testing.T) {
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
 	node.EXPECT().GetLabel().Return(nodeLabel).Times(1)
 
-	getActionTimestampCall := node.EXPECT().GetActionTimestamp().Return(time.Now().Add(-100*time.Second), getTimestampErr).Times(1)
+	node.EXPECT().GetActionTimestamp().Return(time.Now().Add(-100*time.Second), getTimestampErr).Times(1)
 
-	terminateCall := node.EXPECT().Terminate(gomock.Any(), gomock.Any()).Return(terminationErr).Times(1)
-	setLabelCall := node.EXPECT().SetLabel(nodepkg.NodeDeleted).Times(1)
-	setActionTimestampCall := node.EXPECT().SetActionTimestamp(gomock.Any()).Times(1).After(getActionTimestampCall)
-	node.EXPECT().Save(gomock.Any(), gomock.Any()).Return(saveErr).Times(1).After(terminateCall).After(setLabelCall).After(setActionTimestampCall)
+	node.EXPECT().Terminate(gomock.Any(), gomock.Any()).Return(terminationErr).Times(1)
 
 	cfg := config.Config{
 		K8sClient:             fake.NewSimpleClientset(),

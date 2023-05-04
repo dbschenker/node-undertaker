@@ -23,6 +23,8 @@ func CreateAwsCloudProvider(ctx context.Context) (AwsCloudProvider, error) {
 }
 
 func (p AwsCloudProvider) TerminateNode(ctx context.Context, cloudProviderNodeId string) error {
+	// TODO Find LBs that the instance belongs to, and remove it from them
+	// TODO remove ec2 instance from loadbalancers if in any
 	instanceId, err := awscloudproviderv1.KubernetesInstanceID(cloudProviderNodeId).MapToAWSInstanceID()
 	if err != nil {
 		return err

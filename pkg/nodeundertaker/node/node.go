@@ -26,7 +26,6 @@ const (
 	NodeDraining         = "draining"
 	NodeTainted          = "tainted"
 	NodeHealthy          = ""
-	NodeDeleted          = "deleted"
 )
 
 type Node struct {

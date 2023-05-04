@@ -103,14 +103,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 			if err != nil {
 				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "CloudInstanceTermiantion", "Failed", err.Error(), "")
 			}
-			n.SetLabel(nodepkg.NodeDeleted)
-			n.SetActionTimestamp(time.Now())
-			err = n.Save(ctx, cfg)
-			if err != nil {
-				log.Warnf("Received error while saving node %s: %v", n.GetName(), err)
-				nodepkg.ReportEvent(ctx, cfg, log.WarnLevel, n, "Label", "Failed", err.Error(), "")
-				return
-			}
+
 			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "CloudInstanceTermiantion", "Succeeded", "", "")
 		default:
 			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "NodeUpdate", "Failed", fmt.Sprintf("unknown label value found: %s", label), "")
