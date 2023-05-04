@@ -16,14 +16,14 @@ const (
 	ReportingController = "dbschenker.com/node-undertaker"
 )
 
-func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n *Node, action, reason, reasonDesc, msgOverride string) {
+func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE, action, reason, reasonDesc, msgOverride string) {
 	microTime := metav1.NewMicroTime(time.Now())
 	msg := msgOverride
 	if msg == "" {
 		if reasonDesc != "" {
-			msg = fmt.Sprintf("%s/%s: %s %s due to %s", n.Kind, n.ObjectMeta.Name, strings.ToTitle(action), strings.ToLower(reason), reasonDesc)
+			msg = fmt.Sprintf("%s/%s: %s %s due to %s", n.GetKind(), n.GetName(), strings.ToTitle(action), strings.ToLower(reason), reasonDesc)
 		} else {
-			msg = fmt.Sprintf("%s/%s: %s %s", n.Kind, n.ObjectMeta.Name, strings.ToTitle(action), strings.ToLower(reason))
+			msg = fmt.Sprintf("%s/%s: %s %s", n.GetKind(), n.GetName(), strings.ToTitle(action), strings.ToLower(reason))
 		}
 	}
 	var eventType string
@@ -47,9 +47,9 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n *Node
 			Namespace: cfg.Namespace,
 		},
 		Regarding: v1.ObjectReference{
-			Namespace: n.ObjectMeta.Namespace,
-			Name:      n.ObjectMeta.Name,
-			Kind:      n.Kind,
+			Namespace: n.GetNamespace(),
+			Name:      n.GetName(),
+			Kind:      n.GetKind(),
 		},
 		Action:    action,
 		Type:      eventType,

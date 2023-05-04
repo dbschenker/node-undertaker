@@ -28,3 +28,6 @@ vuln:
 
 vet:
 	go vet ./...
+
+kind:
+	kind create cluster --config example/kind/config.yaml

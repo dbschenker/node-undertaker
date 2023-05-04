@@ -580,3 +580,42 @@ func TestTerminate(t *testing.T) {
 	err := n.Terminate(context.TODO(), &cfg)
 	assert.NoError(t, err)
 }
+
+func TestGetName(t *testing.T) {
+	expectedName := "dummy123"
+	v1node := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: expectedName,
+		},
+	}
+	n := CreateNode(&v1node)
+	ret := n.GetName()
+	assert.Equal(t, expectedName, ret)
+}
+
+func TestGetNamespace(t *testing.T) {
+	expectedName := "dummy123"
+	v1node := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: expectedName,
+		},
+	}
+	n := CreateNode(&v1node)
+	ret := n.GetNamespace()
+	assert.Equal(t, v1.NamespaceAll, ret)
+}
+
+func TestGetKind(t *testing.T) {
+	expectedName := "dummy123"
+	expectedKind := "Node"
+
+	v1node := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: expectedName,
+		},
+		TypeMeta: metav1.TypeMeta{Kind: "Node"},
+	}
+	n := CreateNode(&v1node)
+	ret := n.GetKind()
+	assert.Equal(t, expectedKind, ret)
+}
