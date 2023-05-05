@@ -22,10 +22,11 @@ const (
 )
 
 const (
-	NodeUnhealthy string = "unhealthy"
-	NodeDraining         = "draining"
-	NodeTainted          = "tainted"
-	NodeHealthy          = ""
+	NodeUnhealthy   string = "unhealthy"
+	NodeDraining           = "draining"
+	NodeTainted            = "tainted"
+	NodeHealthy            = ""
+	NodeTerminating        = "terminating"
 )
 
 type Node struct {

@@ -16,13 +16,22 @@ import (
 // node not grown up - should do nothing
 func TestNodeUpdateInternalNotGrownUp(t *testing.T) {
 	nodeName := "test-node1"
+	namespaceName := "test-dummy-ns"
 	mockCtrl := gomock.NewController(t)
 	node := mocknode.NewMockNODE(mockCtrl)
 	node.EXPECT().GetName().Return(nodeName)
-	cfg := config.Config{}
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(false).Times(1)
 
+	cfg := config.Config{
+		K8sClient: fake.NewSimpleClientset(),
+		Namespace: namespaceName,
+	}
+
 	nodeUpdateInternal(context.TODO(), &cfg, node)
+
+	events, evErr := cfg.K8sClient.EventsV1().Events(namespaceName).List(context.TODO(), metav1.ListOptions{})
+	assert.NoError(t, evErr)
+	assert.Len(t, events.Items, 0)
 }
 
 // node grown up & with recent lease & no label - should do nothing
@@ -247,7 +256,7 @@ func TestNodeUpdateInternalUnhealthyDrainingLabelOld(t *testing.T) {
 	nodeName := "test-node1"
 	namespaceName := "dummy-ns"
 	hasFreshLease := false
-	var terminationErr error = nil
+	var saveErr error = nil
 	nodeLabel := nodepkg.NodeDraining
 	var hasFreshLeaseErr error = nil
 	var getTimestampErr error = nil
@@ -262,14 +271,79 @@ func TestNodeUpdateInternalUnhealthyDrainingLabelOld(t *testing.T) {
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
 	node.EXPECT().GetLabel().Return(nodeLabel).Times(1)
 
-	node.EXPECT().GetActionTimestamp().Return(time.Now().Add(-100*time.Second), getTimestampErr).Times(1)
-
-	node.EXPECT().Terminate(gomock.Any(), gomock.Any()).Return(terminationErr).Times(1)
+	getTimestampCall := node.EXPECT().GetActionTimestamp().Return(time.Now().Add(-100*time.Second), getTimestampErr).Times(1)
+	setLabelCall := node.EXPECT().SetLabel(nodepkg.NodeTerminating)
+	setTimestampCall := node.EXPECT().SetActionTimestamp(gomock.Any()).Times(1).After(getTimestampCall)
+	node.EXPECT().Save(gomock.Any(), gomock.Any()).Return(saveErr).Times(1).After(setLabelCall).After(setTimestampCall)
 
 	cfg := config.Config{
 		K8sClient:             fake.NewSimpleClientset(),
 		Namespace:             namespaceName,
 		CloudTerminationDelay: 90,
+	}
+
+	nodeUpdateInternal(context.TODO(), &cfg, node)
+	events, evErr := cfg.K8sClient.EventsV1().Events(namespaceName).List(context.TODO(), metav1.ListOptions{})
+	assert.NoError(t, evErr)
+	assert.Len(t, events.Items, 1)
+}
+
+// node grown up & with old lease & label=deleting - should terminate the node in cloud + label + annotate + produce event
+func TestNodeUpdateInternalUnhealthyDeletingOldLease(t *testing.T) {
+	nodeName := "test-node1"
+	namespaceName := "dummy-ns"
+	hasFreshLease := false
+	var terminationErr error = nil
+	nodeLabel := nodepkg.NodeTerminating
+	var hasFreshLeaseErr error = nil
+	mockCtrl := gomock.NewController(t)
+	node := mocknode.NewMockNODE(mockCtrl)
+
+	node.EXPECT().GetName().Return(nodeName).AnyTimes()
+	node.EXPECT().GetKind().Return("Node").AnyTimes()
+	node.EXPECT().GetNamespace().Return(metav1.NamespaceAll).AnyTimes()
+
+	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
+	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
+	node.EXPECT().GetLabel().Return(nodeLabel).Times(1)
+
+	node.EXPECT().Terminate(gomock.Any(), gomock.Any()).Return(terminationErr).Times(1)
+
+	cfg := config.Config{
+		K8sClient: fake.NewSimpleClientset(),
+		Namespace: namespaceName,
+	}
+
+	nodeUpdateInternal(context.TODO(), &cfg, node)
+	events, evErr := cfg.K8sClient.EventsV1().Events(namespaceName).List(context.TODO(), metav1.ListOptions{})
+	assert.NoError(t, evErr)
+	assert.Len(t, events.Items, 1)
+}
+
+// node grown up & with fresh lease & label=deleting + timestamp less than threshold - should terminate the node in cloud + label + annotate + produce event
+func TestNodeUpdateInternalUnhealthyDeletingFreshLease(t *testing.T) {
+	nodeName := "test-node1"
+	namespaceName := "dummy-ns"
+	hasFreshLease := true
+	var terminationErr error = nil
+	nodeLabel := nodepkg.NodeTerminating
+	var hasFreshLeaseErr error = nil
+	mockCtrl := gomock.NewController(t)
+	node := mocknode.NewMockNODE(mockCtrl)
+
+	node.EXPECT().GetName().Return(nodeName).AnyTimes()
+	node.EXPECT().GetKind().Return("Node").AnyTimes()
+	node.EXPECT().GetNamespace().Return(metav1.NamespaceAll).AnyTimes()
+
+	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
+	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
+	node.EXPECT().GetLabel().Return(nodeLabel).Times(1)
+
+	node.EXPECT().Terminate(gomock.Any(), gomock.Any()).Return(terminationErr).Times(1)
+
+	cfg := config.Config{
+		K8sClient: fake.NewSimpleClientset(),
+		Namespace: namespaceName,
 	}
 
 	nodeUpdateInternal(context.TODO(), &cfg, node)

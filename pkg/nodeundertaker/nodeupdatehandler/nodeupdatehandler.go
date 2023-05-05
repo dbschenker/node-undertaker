@@ -29,8 +29,19 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 		return
 	}
 
+	nodeLabel := n.GetLabel()
+
+	if nodeLabel == nodepkg.NodeTerminating {
+		err = n.Terminate(ctx, cfg)
+		if err != nil {
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "CloudInstanceTermiantion", "Failed", err.Error(), "")
+		}
+		nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "CloudInstanceTermiantion", "Succeeded", "", "")
+		return
+	}
+
 	if fresh {
-		if n.GetLabel() != "" {
+		if nodeLabel != "" {
 			n.Untaint()
 			n.RemoveActionTimestamp()
 			n.RemoveLabel()
@@ -43,7 +54,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "TaintRemoval", "Succeeded", "", "")
 		}
 	} else { // node has old lease
-		switch label := n.GetLabel(); label {
+		switch label := nodeLabel; label {
 		case nodepkg.NodeHealthy:
 			n.SetLabel(nodepkg.NodeUnhealthy)
 			err := n.Save(ctx, cfg)
@@ -86,7 +97,6 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 				return
 			}
 			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Drain", "Started", "", "")
-
 		case nodepkg.NodeDraining:
 			nodeModificationTimestamp, err := n.GetActionTimestamp()
 			if err != nil {
@@ -99,12 +109,17 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 				return
 			}
 
-			err = n.Terminate(ctx, cfg)
+			n.SetActionTimestamp(time.Now())
+			n.SetLabel(nodepkg.NodeTerminating)
+			err = n.Save(ctx, cfg)
 			if err != nil {
-				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "CloudInstanceTermiantion", "Failed", err.Error(), "")
+				log.Errorf("Received error while saving node %s: %v", n.GetName(), err)
+				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Saving", "Failed", err.Error(), "")
+				return
 			}
 
-			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "CloudInstanceTermiantion", "Succeeded", "", "")
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Terminating", "Succeeded", "", "")
+		//case nodepkg.NodeTerminating: Shouldn't be handled here
 		default:
 			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "NodeUpdate", "Failed", fmt.Sprintf("unknown label value found: %s", label), "")
 		}
