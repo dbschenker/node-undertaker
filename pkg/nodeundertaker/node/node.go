@@ -189,5 +189,5 @@ func (n *Node) GetName() string {
 }
 
 func (n *Node) GetKind() string {
-	return n.TypeMeta.Kind
+	return "Node"
 }

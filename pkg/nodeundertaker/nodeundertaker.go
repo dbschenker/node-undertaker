@@ -59,7 +59,7 @@ func Execute() error {
 	// start logic
 	err = startLogic(ctx, cfg, nodeupdatehandler.GetDefaultUpdateHandlerFuncs(ctx, cfg), observabilityServer)
 	if err != nil {
-		log.Errorf("couldn't start properly")
+		log.Errorf("couldn't start properly, due to %v", err)
 	}
 	return nil
 }

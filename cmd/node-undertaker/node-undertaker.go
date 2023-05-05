@@ -16,7 +16,7 @@ var rootCmd = &cobra.Command{
 	Long: "Node undertaker terminates kubernetes nodes that are unhealthy" +
 		"Please use `node-undertaker --help` to get possible options",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("Please use `node-undertaker --help` to get possible options")
+		fmt.Println("Node-undertaker starting")
 		err := flags.ValidateRootFlags()
 		if err != nil {
 			return err

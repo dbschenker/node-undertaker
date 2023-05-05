@@ -25,9 +25,6 @@ func TestOnNodeUpdate(t *testing.T) {
 			Namespace:         namespaceName,
 			CreationTimestamp: metav1.NewTime(creationTime),
 		},
-		TypeMeta: metav1.TypeMeta{
-			Kind: "Node",
-		},
 	}
 
 	cfg := config.Config{

@@ -603,7 +603,6 @@ func TestGetKind(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: expectedName,
 		},
-		TypeMeta: metav1.TypeMeta{Kind: "Node"},
 	}
 	n := CreateNode(&v1node)
 	ret := n.GetKind()
