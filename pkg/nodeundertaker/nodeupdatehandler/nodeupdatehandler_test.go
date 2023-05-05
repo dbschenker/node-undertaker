@@ -7,11 +7,41 @@ import (
 	mocknode "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/node/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
 	"time"
 )
+
+func TestOnNodeUpdate(t *testing.T) {
+	nodeName := "test-node1"
+	namespaceName := "test-dummy-ns"
+	creationTime := metav1.Now().Add(-20 * time.Second).UTC()
+
+	nv1 := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              nodeName,
+			Namespace:         namespaceName,
+			CreationTimestamp: metav1.NewTime(creationTime),
+		},
+		TypeMeta: metav1.TypeMeta{
+			Kind: "Node",
+		},
+	}
+
+	cfg := config.Config{
+		K8sClient:            fake.NewSimpleClientset(),
+		Namespace:            namespaceName,
+		NodeInitialThreshold: 1000,
+	}
+
+	OnNodeUpdate(context.TODO(), &cfg, &nv1)
+
+	events, evErr := cfg.K8sClient.EventsV1().Events(namespaceName).List(context.TODO(), metav1.ListOptions{})
+	assert.NoError(t, evErr)
+	assert.Len(t, events.Items, 0)
+}
 
 // node not grown up - should do nothing
 func TestNodeUpdateInternalNotGrownUp(t *testing.T) {
@@ -350,4 +380,14 @@ func TestNodeUpdateInternalUnhealthyDeletingFreshLease(t *testing.T) {
 	events, evErr := cfg.K8sClient.EventsV1().Events(namespaceName).List(context.TODO(), metav1.ListOptions{})
 	assert.NoError(t, evErr)
 	assert.Len(t, events.Items, 1)
+}
+
+func TestGetDefaultUpdateHandlerFuncs(t *testing.T) {
+	ctx := context.TODO()
+	cfg := &config.Config{}
+
+	result := GetDefaultUpdateHandlerFuncs(ctx, cfg)
+	assert.Nil(t, result.DeleteFunc)
+	assert.NotNil(t, result.AddFunc)
+	assert.NotNil(t, result.UpdateFunc)
 }
