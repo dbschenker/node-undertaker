@@ -11,6 +11,11 @@ type AwsCloudProvider struct {
 	Ec2Client EC2CLIENT
 }
 
+const (
+	TerminationEventActionFailed    = "InstanceTerminationFailed"
+	TerminationEventActionSucceeded = "InstanceTerminated"
+)
+
 func CreateAwsCloudProvider(ctx context.Context) (AwsCloudProvider, error) {
 	ret := AwsCloudProvider{}
 
@@ -22,12 +27,12 @@ func CreateAwsCloudProvider(ctx context.Context) (AwsCloudProvider, error) {
 	return ret, nil
 }
 
-func (p AwsCloudProvider) TerminateNode(ctx context.Context, cloudProviderNodeId string) error {
+func (p AwsCloudProvider) TerminateNode(ctx context.Context, cloudProviderNodeId string) (string, error) {
 	// TODO Find LBs that the instance belongs to, and remove it from them
 	// TODO remove ec2 instance from loadbalancers if in any
 	instanceId, err := awscloudproviderv1.KubernetesInstanceID(cloudProviderNodeId).MapToAWSInstanceID()
 	if err != nil {
-		return err
+		return TerminationEventActionFailed, err
 	}
 	input := ec2.TerminateInstancesInput{
 		InstanceIds: []string{
@@ -36,6 +41,8 @@ func (p AwsCloudProvider) TerminateNode(ctx context.Context, cloudProviderNodeId
 	}
 
 	_, err = p.Ec2Client.TerminateInstances(ctx, &input)
-
-	return err
+	if err != nil {
+		return TerminationEventActionFailed, err
+	}
+	return TerminationEventActionSucceeded, nil
 }

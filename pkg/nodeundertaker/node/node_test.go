@@ -564,9 +564,10 @@ func TestRemoveActionTimestampNotExisting(t *testing.T) {
 }
 
 func TestTerminate(t *testing.T) {
+	termianteAction := "TestAction"
 	mockCtrl := gomock.NewController(t)
 	cloudProvider := mockcloudproviders.NewMockCLOUDPROVIDER(mockCtrl)
-	cloudProvider.EXPECT().TerminateNode(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	cloudProvider.EXPECT().TerminateNode(gomock.Any(), gomock.Any()).Return(termianteAction, nil).Times(1)
 
 	cfg := config.Config{
 		CloudProvider: cloudProvider,
@@ -577,8 +578,9 @@ func TestTerminate(t *testing.T) {
 		},
 	}
 	n := CreateNode(&v1node)
-	err := n.Terminate(context.TODO(), &cfg)
+	res, err := n.Terminate(context.TODO(), &cfg)
 	assert.NoError(t, err)
+	assert.Equal(t, termianteAction, res)
 }
 
 func TestGetName(t *testing.T) {

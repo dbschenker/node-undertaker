@@ -6,6 +6,7 @@ import (
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/cmd/node-undertaker/flags"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders/aws"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders/kind"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/kubeclient"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/nodeupdatehandler"
@@ -102,7 +103,9 @@ func getCloudProvider(ctx context.Context) (cloudproviders.CLOUDPROVIDER, error)
 	case "aws":
 		cloudProvider, err := aws.CreateAwsCloudProvider(ctx)
 		return cloudProvider, err
-
+	case "kind":
+		cloudProvider, err := kind.CreateAwsCloudProvider(ctx)
+		return cloudProvider, err
 	default:
 		return nil, fmt.Errorf("Unknown cloud provider: %s", cloudProviderName)
 	}

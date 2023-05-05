@@ -32,11 +32,11 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 	nodeLabel := n.GetLabel()
 
 	if nodeLabel == nodepkg.NodeTerminating {
-		err = n.Terminate(ctx, cfg)
+		action, err := n.Terminate(ctx, cfg)
 		if err != nil {
-			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "CloudInstanceTermiantion", "Failed", err.Error(), "")
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, action, "Failed", err.Error(), "")
 		}
-		nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "CloudInstanceTermiantion", "Succeeded", "", "")
+		nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, action, "Succeeded", "", "")
 		return
 	}
 

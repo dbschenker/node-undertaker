@@ -6,5 +6,7 @@ import "context"
 
 type CLOUDPROVIDER interface {
 	ValidateConfig() error
-	TerminateNode(context.Context, string) error
+
+	// TerminateNode terminates node with provided providerId. Returns message (for creation of events) and error
+	TerminateNode(context.Context, string) (string, error)
 }

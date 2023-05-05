@@ -34,8 +34,9 @@ func TestTerminateNode(t *testing.T) {
 	cloudProvider := AwsCloudProvider{
 		Ec2Client: ec2Client,
 	}
-	err := cloudProvider.TerminateNode(context.TODO(), "aws://nonexistant/i-123")
+	res, err := cloudProvider.TerminateNode(context.TODO(), "aws://nonexistant/i-123")
 	assert.NoError(t, err)
+	assert.Equal(t, TerminationEventActionSucceeded, res)
 }
 
 func TestTerminateNodeWrongProviderId(t *testing.T) {
@@ -45,6 +46,7 @@ func TestTerminateNodeWrongProviderId(t *testing.T) {
 	cloudProvider := AwsCloudProvider{
 		Ec2Client: ec2Client,
 	}
-	err := cloudProvider.TerminateNode(context.TODO(), "test123")
+	res, err := cloudProvider.TerminateNode(context.TODO(), "test123")
 	assert.Error(t, err)
+	assert.Equal(t, TerminationEventActionFailed, res)
 }

@@ -46,7 +46,7 @@ type NODE interface {
 	Taint()
 	Untaint()
 	Drain()
-	Terminate(ctx context.Context, cfg *config.Config) error
+	Terminate(ctx context.Context, cfg *config.Config) (string, error)
 	Save(ctx context.Context, cfg *config.Config) error
 	GetName() string
 	GetNamespace() string
@@ -163,7 +163,7 @@ func (n *Node) Drain() {
 }
 
 // Terminate deletes node from cloud provider
-func (n *Node) Terminate(ctx context.Context, cfg *config.Config) error {
+func (n *Node) Terminate(ctx context.Context, cfg *config.Config) (string, error) {
 	return cfg.CloudProvider.TerminateNode(ctx, n.Spec.ProviderID)
 }
 

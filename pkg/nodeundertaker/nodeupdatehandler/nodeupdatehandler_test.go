@@ -43,6 +43,33 @@ func TestOnNodeUpdate(t *testing.T) {
 	assert.Len(t, events.Items, 0)
 }
 
+// unknown node label, node with old lease - should do nothin
+func TestUnknownLabel(t *testing.T) {
+	nodeName := "test-node1"
+	namespaceName := "test-dummy-ns"
+	mockCtrl := gomock.NewController(t)
+	node := mocknode.NewMockNODE(mockCtrl)
+
+	node.EXPECT().GetName().Return(nodeName).AnyTimes()
+	node.EXPECT().GetKind().Return("Node").AnyTimes()
+	node.EXPECT().GetNamespace().Return(namespaceName).AnyTimes()
+
+	node.EXPECT().GetLabel().Return("unknown-label").Times(1)
+	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
+	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(false, nil).Times(1)
+
+	cfg := config.Config{
+		K8sClient: fake.NewSimpleClientset(),
+		Namespace: namespaceName,
+	}
+
+	nodeUpdateInternal(context.TODO(), &cfg, node)
+
+	events, evErr := cfg.K8sClient.EventsV1().Events(namespaceName).List(context.TODO(), metav1.ListOptions{})
+	assert.NoError(t, evErr)
+	assert.Len(t, events.Items, 1)
+}
+
 // node not grown up - should do nothing
 func TestNodeUpdateInternalNotGrownUp(t *testing.T) {
 	nodeName := "test-node1"
@@ -323,6 +350,7 @@ func TestNodeUpdateInternalUnhealthyDeletingOldLease(t *testing.T) {
 	nodeName := "test-node1"
 	namespaceName := "dummy-ns"
 	hasFreshLease := false
+	terminationAction := "CloudInstanceTerminated"
 	var terminationErr error = nil
 	nodeLabel := nodepkg.NodeTerminating
 	var hasFreshLeaseErr error = nil
@@ -337,7 +365,7 @@ func TestNodeUpdateInternalUnhealthyDeletingOldLease(t *testing.T) {
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
 	node.EXPECT().GetLabel().Return(nodeLabel).Times(1)
 
-	node.EXPECT().Terminate(gomock.Any(), gomock.Any()).Return(terminationErr).Times(1)
+	node.EXPECT().Terminate(gomock.Any(), gomock.Any()).Return(terminationAction, terminationErr).Times(1)
 
 	cfg := config.Config{
 		K8sClient: fake.NewSimpleClientset(),
@@ -354,6 +382,8 @@ func TestNodeUpdateInternalUnhealthyDeletingOldLease(t *testing.T) {
 func TestNodeUpdateInternalUnhealthyDeletingFreshLease(t *testing.T) {
 	nodeName := "test-node1"
 	namespaceName := "dummy-ns"
+	terminationAction := "CloudInstanceTerminated"
+
 	hasFreshLease := true
 	var terminationErr error = nil
 	nodeLabel := nodepkg.NodeTerminating
@@ -369,7 +399,7 @@ func TestNodeUpdateInternalUnhealthyDeletingFreshLease(t *testing.T) {
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
 	node.EXPECT().GetLabel().Return(nodeLabel).Times(1)
 
-	node.EXPECT().Terminate(gomock.Any(), gomock.Any()).Return(terminationErr).Times(1)
+	node.EXPECT().Terminate(gomock.Any(), gomock.Any()).Return(terminationAction, terminationErr).Times(1)
 
 	cfg := config.Config{
 		K8sClient: fake.NewSimpleClientset(),
