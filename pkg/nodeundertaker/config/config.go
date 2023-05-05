@@ -24,6 +24,7 @@ type Config struct {
 
 func GetConfig() (*Config, error) {
 	ret := Config{}
+	ret.InformerResync = 60 * time.Second
 	ret.DrainDelay = viper.GetInt(flags.DrainDelayFlag)
 	ret.CloudTerminationDelay = viper.GetInt(flags.CloudTerminationDelayFlag)
 	ret.Port = viper.GetInt(flags.PortFlag)

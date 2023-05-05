@@ -43,7 +43,7 @@ spec:
               echo "NODE_UID=$NODE_UID"
               while :
               do 
-                export UNHEALTHY=$(kubectl get node $NODE_NAME --no-headers -o 'custom-columns=arch:.metadata.labels.pocUnealthy') 
+                export UNHEALTHY=$(kubectl get node $NODE_NAME --no-headers -o 'custom-columns=arch:.metadata.labels.testUnhealthy') 
                 if [ "$UNHEALTHY" != "true" ]; then 
                   echo "{\"apiVersion\": \"coordination.k8s.io/v1\",\"kind\": \"Lease\",\"metadata\": {\"name\": \"$NODE_NAME\",\"namespace\": \"$NAMESPACE_NAME\", \"ownerReferences\": [{\"apiVersion\": \"v1\",\"kind\": \"Node\",\"name\": \"$NODE_NAME\",\"uid\": \"$NODE_UID\"}]}, \"spec\": {\"holderIdentity\": \"$NODE_NAME\", \"leaseDurationSeconds\": $LEASE_DURATION, \"renewTime\": \"$(date -u +"%Y-%m-%dT%H:%M:%S.%6NZ")\"}}" | kubectl apply -f -
                 else 

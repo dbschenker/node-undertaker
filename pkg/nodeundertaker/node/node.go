@@ -147,12 +147,16 @@ func (n *Node) Untaint() {
 	}
 
 	// assume that there is only taint with same set of parameters (api sever should guard this)
+	newTaints := make([]v1.Taint, 0)
 	for i := range n.Spec.Taints {
-		if n.Spec.Taints[i] == taint {
-			n.Spec.Taints = append(n.Spec.Taints[:i], n.Spec.Taints[i+1])
+		if n.Spec.Taints[i] != taint {
+			newTaints = append(newTaints, n.Spec.Taints[i])
+		} else {
 			n.changed = true
-			return
 		}
+	}
+	if n.changed {
+		n.Spec.Taints = newTaints
 	}
 }
 

@@ -19,6 +19,6 @@ nodes:
   # the three workers
   - role: worker
     labels:
-      pocUnealthy: true
+      testUnhealthy: true
   - role: worker
   - role: worker
