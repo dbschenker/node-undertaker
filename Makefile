@@ -31,3 +31,6 @@ vet:
 
 kind:
 	kind create cluster --config example/kind/config.yaml
+
+local:
+	bin/node-undertaker --namespace node-undertaker --log-level=debug --cloud-provider=kind --cloud-termination-delay=60 --drain-delay=60

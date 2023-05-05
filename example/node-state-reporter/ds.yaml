@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-lease-reporter
+  namespace: node-undertaker
+spec:
+  selector:
+    matchLabels:
+      app: node-lease-reporter
+  template:
+    metadata:
+      labels:
+        app: node-lease-reporter
+    spec:
+      serviceAccountName: node-lease-reporter
+      tolerations:
+        - operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: reporter
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: NAMESPACE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: LEASE_DURATION
+              value: "130"
+            - name: SLEEP
+              value: "20"
+#          image: ghcr.io/gdisdevops/docker-images/kubectl:v1.24.9
+          image: bitnami/kubectl:1.26
+          command:
+          - /bin/sh
+          - -c
+          args:
+            - |
+              set -ex
+              export NODE_UID="$(kubectl get node -o custom-columns=uid:.metadata.uid --no-headers $NODE_NAME)"
+              echo "NODE_UID=$NODE_UID"
+              while :
+              do 
+                export UNHEALTHY=$(kubectl get node $NODE_NAME --no-headers -o 'custom-columns=arch:.metadata.labels.pocUnealthy') 
+                if [ "$UNHEALTHY" != "true" ]; then 
+                  echo "{\"apiVersion\": \"coordination.k8s.io/v1\",\"kind\": \"Lease\",\"metadata\": {\"name\": \"$NODE_NAME\",\"namespace\": \"$NAMESPACE_NAME\", \"ownerReferences\": [{\"apiVersion\": \"v1\",\"kind\": \"Node\",\"name\": \"$NODE_NAME\",\"uid\": \"$NODE_UID\"}]}, \"spec\": {\"holderIdentity\": \"$NODE_NAME\", \"leaseDurationSeconds\": $LEASE_DURATION, \"renewTime\": \"$(date -u +"%Y-%m-%dT%H:%M:%S.%6NZ")\"}}" | kubectl apply -f -
+                else 
+                  echo "Node unhealthy, not updating lease"
+                fi
+                sleep $SLEEP
+              done

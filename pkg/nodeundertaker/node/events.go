@@ -47,7 +47,7 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE,
 			Namespace: cfg.Namespace,
 		},
 		Regarding: v1.ObjectReference{
-			Namespace: n.GetNamespace(),
+			Namespace: cfg.Namespace,
 			Name:      n.GetName(),
 			Kind:      n.GetKind(),
 		},

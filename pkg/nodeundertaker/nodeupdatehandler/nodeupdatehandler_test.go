@@ -52,7 +52,6 @@ func TestUnknownLabel(t *testing.T) {
 
 	node.EXPECT().GetName().Return(nodeName).AnyTimes()
 	node.EXPECT().GetKind().Return("Node").AnyTimes()
-	node.EXPECT().GetNamespace().Return(namespaceName).AnyTimes()
 
 	node.EXPECT().GetLabel().Return("unknown-label").Times(1)
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
@@ -122,7 +121,6 @@ func TestNodeUpdateInternalHealthyUnhealthyLabel(t *testing.T) {
 
 	node.EXPECT().GetName().Return(nodeName).AnyTimes()
 	node.EXPECT().GetKind().Return("Node").AnyTimes()
-	node.EXPECT().GetNamespace().Return(metav1.NamespaceAll).AnyTimes()
 
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
@@ -154,7 +152,6 @@ func TestNodeUpdateInternalUnhealthyNoLabel(t *testing.T) {
 
 	node.EXPECT().GetName().Return(nodeName).AnyTimes()
 	node.EXPECT().GetKind().Return("Node").AnyTimes()
-	node.EXPECT().GetNamespace().Return(metav1.NamespaceAll).AnyTimes()
 
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
@@ -184,7 +181,6 @@ func TestNodeUpdateInternalUnhealthyUnhealthyLabel(t *testing.T) {
 
 	node.EXPECT().GetName().Return(nodeName).AnyTimes()
 	node.EXPECT().GetKind().Return("Node").AnyTimes()
-	node.EXPECT().GetNamespace().Return(metav1.NamespaceAll).AnyTimes()
 
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
@@ -216,7 +212,6 @@ func TestNodeUpdateInternalUnhealthyTaintedLabelRecent(t *testing.T) {
 
 	node.EXPECT().GetName().Return(nodeName).AnyTimes()
 	node.EXPECT().GetKind().Return("Node").AnyTimes()
-	node.EXPECT().GetNamespace().Return(metav1.NamespaceAll).AnyTimes()
 
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
@@ -250,7 +245,6 @@ func TestNodeUpdateInternalUnhealthyTaintedLabelOld(t *testing.T) {
 
 	node.EXPECT().GetName().Return(nodeName).AnyTimes()
 	node.EXPECT().GetKind().Return("Node").AnyTimes()
-	node.EXPECT().GetNamespace().Return(metav1.NamespaceAll).AnyTimes()
 
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
@@ -288,7 +282,6 @@ func TestNodeUpdateInternalUnhealthyDrainingLabelRecent(t *testing.T) {
 
 	node.EXPECT().GetName().Return(nodeName).AnyTimes()
 	node.EXPECT().GetKind().Return("Node").AnyTimes()
-	node.EXPECT().GetNamespace().Return(metav1.NamespaceAll).AnyTimes()
 
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
@@ -322,7 +315,6 @@ func TestNodeUpdateInternalUnhealthyDrainingLabelOld(t *testing.T) {
 
 	node.EXPECT().GetName().Return(nodeName).AnyTimes()
 	node.EXPECT().GetKind().Return("Node").AnyTimes()
-	node.EXPECT().GetNamespace().Return(metav1.NamespaceAll).AnyTimes()
 
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
@@ -359,7 +351,6 @@ func TestNodeUpdateInternalUnhealthyDeletingOldLease(t *testing.T) {
 
 	node.EXPECT().GetName().Return(nodeName).AnyTimes()
 	node.EXPECT().GetKind().Return("Node").AnyTimes()
-	node.EXPECT().GetNamespace().Return(metav1.NamespaceAll).AnyTimes()
 
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
@@ -393,7 +384,6 @@ func TestNodeUpdateInternalUnhealthyDeletingFreshLease(t *testing.T) {
 
 	node.EXPECT().GetName().Return(nodeName).AnyTimes()
 	node.EXPECT().GetKind().Return("Node").AnyTimes()
-	node.EXPECT().GetNamespace().Return(metav1.NamespaceAll).AnyTimes()
 
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)

@@ -18,7 +18,7 @@ const (
 	TaintKey            = "dbschenker.com/node-undertaker"
 	TaintValue          = ""
 	Label               = "dbschenker.com/node-undertaker"
-	TimestampAnnotation = "dbschenker.com/node-undertaker/timestamp"
+	TimestampAnnotation = "dbschenker.com/node-undertaker-timestamp"
 )
 
 const (
@@ -49,7 +49,6 @@ type NODE interface {
 	Terminate(ctx context.Context, cfg *config.Config) (string, error)
 	Save(ctx context.Context, cfg *config.Config) error
 	GetName() string
-	GetNamespace() string
 	GetKind() string
 }
 
@@ -185,10 +184,6 @@ func (n *Node) GetName() string {
 	return n.ObjectMeta.Name
 }
 
-func (n *Node) GetNamespace() string {
-	return n.ObjectMeta.Namespace
-}
-
 func (n *Node) GetKind() string {
-	return n.Kind
+	return n.TypeMeta.Kind
 }
