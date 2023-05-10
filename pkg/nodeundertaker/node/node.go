@@ -9,6 +9,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/kubectl/pkg/drain"
 	"time"
 )
 
@@ -45,7 +46,7 @@ type NODE interface {
 	GetActionTimestamp() (time.Time, error)
 	Taint()
 	Untaint()
-	Drain()
+	Drain(ctx context.Context, cfg *config.Config) error
 	Terminate(ctx context.Context, cfg *config.Config) (string, error)
 	Save(ctx context.Context, cfg *config.Config) error
 	GetName() string
@@ -160,9 +161,29 @@ func (n *Node) Untaint() {
 	}
 }
 
-func (n *Node) Drain() {
+func (n *Node) Drain(ctx context.Context, cfg *config.Config) error {
 	//https://github.com/aws/aws-node-termination-handler/blob/main/pkg/node/node.go#L106
-	panic("not implemented")
+	drainHelper := drain.Helper{
+		Client:              cfg.K8sClient,
+		Ctx:                 ctx,
+		Force:               true,
+		GracePeriodSeconds:  -1, //use pods terminationGracePeriodSeconds
+		IgnoreAllDaemonSets: true,
+		DeleteEmptyDirData:  true,
+		Timeout:             time.Duration(cfg.CloudTerminationDelay) * time.Second,
+		DisableEviction:     false, // true - use delete rather than evict
+		OnPodDeletedOrEvicted: func(pod *v1.Pod, usingEviction bool) {
+			operation := "deleted"
+			if usingEviction {
+				operation = "evicted"
+			}
+			log.Debugf("Pod %s in namespace: %s %s", pod.ObjectMeta.Name, pod.ObjectMeta.Namespace, operation)
+		},
+		Out:    log.StandardLogger().Out,
+		ErrOut: log.StandardLogger().Out,
+	}
+	err := drain.RunNodeDrain(&drainHelper, n.GetName())
+	return err
 }
 
 // Terminate deletes node from cloud provider

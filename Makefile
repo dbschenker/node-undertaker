@@ -34,3 +34,7 @@ kind:
 
 local:
 	bin/node-undertaker --namespace node-undertaker --log-level=debug --cloud-provider=kind --cloud-termination-delay=60 --drain-delay=60
+
+kwok:
+	kwok create cluster
+	kubectl config use-context kwok-kwok

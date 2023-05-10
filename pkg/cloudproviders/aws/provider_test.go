@@ -13,7 +13,7 @@ import (
 func TestCreateAwsCloudProvider(t *testing.T) {
 	ctx := context.TODO()
 
-	ret, err := CreateAwsCloudProvider(ctx)
+	ret, err := CreateCloudProvider(ctx)
 	assert.NoError(t, err)
 	//assert.Equal(t, dummyRegion, ret.Region)
 	assert.NotNil(t, ret)

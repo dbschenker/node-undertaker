@@ -16,7 +16,7 @@ const (
 	TerminationEventActionSucceeded = "InstanceTerminated"
 )
 
-func CreateAwsCloudProvider(ctx context.Context) (AwsCloudProvider, error) {
+func CreateCloudProvider(ctx context.Context) (AwsCloudProvider, error) {
 	ret := AwsCloudProvider{}
 
 	cfg, err := config.LoadDefaultConfig(ctx)
