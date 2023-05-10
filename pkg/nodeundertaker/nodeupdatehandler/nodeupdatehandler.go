@@ -87,12 +87,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 				return
 			}
 
-			err = n.Drain(ctx, cfg)
-			if err != nil {
-				log.Errorf("Received error while draiing node %s: %v", n.GetName(), err)
-				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Drain", "Failed", err.Error(), "")
-				return
-			}
+			n.StartDrain(ctx, cfg)
 			n.SetActionTimestamp(time.Now())
 			n.SetLabel(nodepkg.NodeDraining)
 			err = n.Save(ctx, cfg)

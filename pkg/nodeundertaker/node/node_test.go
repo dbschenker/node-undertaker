@@ -629,11 +629,14 @@ func TestDrain(t *testing.T) {
 
 	nodeName := fmt.Sprintf("kwok-test-drain-node-%s", rand.String(20))
 	replicaCount := 10
+	deploymentName := "test-deployment1"
 
 	err = kwokProvider.CreateNode(ctx, nodeName)
 	assert.NoError(t, err)
 
-	err = createDeployment(t, ctx, clientset, "test-deployment1", v1.NamespaceDefault, "pause", int32(replicaCount))
+	err = createDeployment(t, ctx, clientset, deploymentName, v1.NamespaceDefault, "pause", int32(replicaCount))
+	require.NoError(t, err)
+	err = waitForDeploymentReadyPods(ctx, clientset, 60*time.Second, deploymentName, v1.NamespaceDefault, replicaCount)
 	require.NoError(t, err)
 
 	nodePodsBefore, err := clientset.CoreV1().Pods(v1.NamespaceDefault).List(ctx, metav1.ListOptions{
@@ -656,8 +659,11 @@ func TestDrain(t *testing.T) {
 	require.NoError(t, err)
 
 	// drain
-	err = node.Drain(ctx, &cfg)
+	node.StartDrain(ctx, &cfg)
 	assert.NoError(t, err)
+
+	err = waitForDeploymentReadyPods(ctx, clientset, 60*time.Second, deploymentName, v1.NamespaceDefault, 0)
+	require.NoError(t, err)
 
 	ret, err := kwokProvider.K8sClient.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	assert.NoError(t, err)
@@ -684,12 +690,14 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 
 	nodeName := fmt.Sprintf("kwok-test-drain-node-%s", rand.String(20))
 	replicaCount := 10
-	appName := "test-deployment1"
+	deploymentName := "test-deployment1"
 
 	err = kwokProvider.CreateNode(ctx, nodeName)
 	assert.NoError(t, err)
 
-	err = createDeployment(t, ctx, clientset, appName, v1.NamespaceDefault, "pause", int32(replicaCount))
+	err = createDeployment(t, ctx, clientset, deploymentName, v1.NamespaceDefault, "pause", int32(replicaCount))
+	require.NoError(t, err)
+	err = waitForDeploymentReadyPods(ctx, clientset, 60*time.Second, deploymentName, v1.NamespaceDefault, replicaCount)
 	require.NoError(t, err)
 
 	pdpbMaxUnavail := intstr.FromInt(0)
@@ -702,7 +710,7 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 			MaxUnavailable: &pdpbMaxUnavail,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": appName,
+					"app": deploymentName,
 				},
 			},
 		},
@@ -730,8 +738,9 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 	require.NoError(t, err)
 
 	// drain
-	err = node.Drain(ctx, &cfg)
-	assert.Error(t, err)
+	node.StartDrain(ctx, &cfg)
+
+	time.Sleep(time.Duration(cfg.CloudTerminationDelay*2) * time.Second) //sleep twice as long as drain takes
 
 	ret, err := kwokProvider.K8sClient.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	assert.NoError(t, err)
@@ -746,7 +755,7 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 	assert.Len(t, nodePodsAfter.Items, replicaCount)
 }
 
-// createDeployment creates deployment and waits until it has all pods ready
+// createDeployment creates deployment
 func createDeployment(t *testing.T, ctx context.Context, clientset *kubernetes.Clientset, name, namespace, image string, replicas int32) error {
 	t.Helper()
 	deploy := appsv1.Deployment{
@@ -779,19 +788,21 @@ func createDeployment(t *testing.T, ctx context.Context, clientset *kubernetes.C
 	}
 
 	_, err := clientset.AppsV1().Deployments(namespace).Create(ctx, &deploy, metav1.CreateOptions{})
-	if err != nil {
-		return err
-	}
-	wait.PollUntilContextTimeout(ctx, time.Second, 30*time.Second, true, func(context.Context) (bool, error) {
-		dep, err := clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-		if dep.Status.ReadyReplicas == *dep.Spec.Replicas {
-			return true, nil
-		}
-		return false, nil
-	})
+	return err
+}
 
-	return nil
+func waitForDeploymentReadyPods(ctx context.Context, clientset *kubernetes.Clientset, duration time.Duration, name, namespace string, requiredNumber int) error {
+	return wait.PollUntilContextTimeout(ctx, time.Second, duration, true,
+		func(context.Context) (bool, error) {
+			dep, err := clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
+			if err != nil {
+				return false, err
+			}
+			if dep.Status.ReadyReplicas == int32(requiredNumber) {
+				return true, nil
+			}
+			return false, nil
+		},
+	)
+
 }

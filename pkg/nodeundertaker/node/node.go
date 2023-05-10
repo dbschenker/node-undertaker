@@ -46,7 +46,7 @@ type NODE interface {
 	GetActionTimestamp() (time.Time, error)
 	Taint()
 	Untaint()
-	Drain(ctx context.Context, cfg *config.Config) error
+	StartDrain(ctx context.Context, cfg *config.Config)
 	Terminate(ctx context.Context, cfg *config.Config) (string, error)
 	Save(ctx context.Context, cfg *config.Config) error
 	GetName() string
@@ -161,7 +161,7 @@ func (n *Node) Untaint() {
 	}
 }
 
-func (n *Node) Drain(ctx context.Context, cfg *config.Config) error {
+func (n *Node) StartDrain(ctx context.Context, cfg *config.Config) {
 	//https://github.com/aws/aws-node-termination-handler/blob/main/pkg/node/node.go#L106
 	drainHelper := drain.Helper{
 		Client:              cfg.K8sClient,
@@ -182,8 +182,14 @@ func (n *Node) Drain(ctx context.Context, cfg *config.Config) error {
 		Out:    log.StandardLogger().Out,
 		ErrOut: log.StandardLogger().Out,
 	}
-	err := drain.RunNodeDrain(&drainHelper, n.GetName())
-	return err
+
+	go func() {
+		err := drain.RunNodeDrain(&drainHelper, n.GetName())
+		if err != nil {
+			log.Errorf("error drainining node %s: %v", n.GetName(), err)
+		}
+	}()
+
 }
 
 // Terminate deletes node from cloud provider
