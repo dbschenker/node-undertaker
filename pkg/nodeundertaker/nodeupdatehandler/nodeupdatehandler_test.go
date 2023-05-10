@@ -249,7 +249,7 @@ func TestNodeUpdateInternalUnhealthyTaintedLabelOld(t *testing.T) {
 
 	node.EXPECT().GetActionTimestamp().Return(time.Now().Add(-100*time.Second), getTimestampErr).Times(1)
 
-	drainCall := node.EXPECT().Drain().Times(1)
+	drainCall := node.EXPECT().Drain(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 	drainingCall := node.EXPECT().SetLabel(nodepkg.NodeDraining).Times(1)
 	timestampCall := node.EXPECT().SetActionTimestamp(gomock.Any()).Times(1)
 	node.EXPECT().Save(gomock.Any(), gomock.Any()).Return(saveErr).Times(1).After(drainingCall).After(timestampCall).After(drainCall)

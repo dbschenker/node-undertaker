@@ -7,6 +7,7 @@ import (
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders/aws"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders/kind"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders/kwok"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/kubeclient"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/nodeupdatehandler"
@@ -101,10 +102,14 @@ func startLogic(ctx context.Context, cfg *config.Config, handlerFuncs cache.Reso
 func getCloudProvider(ctx context.Context) (cloudproviders.CLOUDPROVIDER, error) {
 	switch cloudProviderName := viper.GetString(flags.CloudProviderFlag); cloudProviderName {
 	case "aws":
-		cloudProvider, err := aws.CreateAwsCloudProvider(ctx)
+		cloudProvider, err := aws.CreateCloudProvider(ctx)
 		return cloudProvider, err
 	case "kind":
-		cloudProvider, err := kind.CreateAwsCloudProvider(ctx)
+		cloudProvider, err := kind.CreateCloudProvider(ctx)
+		return cloudProvider, err
+
+	case "kwok":
+		cloudProvider, err := kwok.CreateCloudProvider(ctx)
 		return cloudProvider, err
 	default:
 		return nil, fmt.Errorf("Unknown cloud provider: %s", cloudProviderName)

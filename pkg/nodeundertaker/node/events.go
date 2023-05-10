@@ -8,6 +8,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	eventsv1 "k8s.io/api/events/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/rand"
 	"strings"
 	"time"
 )
@@ -30,20 +31,17 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE,
 	switch lvl {
 	case log.ErrorLevel:
 		eventType = "Error"
-		log.Errorf(msg)
 	case log.WarnLevel:
 		eventType = "Warning"
-		log.Warningf(msg)
 	case log.InfoLevel:
 		eventType = "Normal"
-		log.Infof(msg)
 	default:
 		log.Errorf("Unsupported event level: %s", log.ErrorLevel.String())
 		return
 	}
 	evt := eventsv1.Event{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("node-undertaker.%d", microTime.UnixMicro()),
+			Name:      fmt.Sprintf("node-undertaker.%s", rand.String(16)),
 			Namespace: cfg.Namespace,
 		},
 		Regarding: v1.ObjectReference{
@@ -61,6 +59,7 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE,
 		Note:                msg,
 	}
 
+	log.StandardLogger().Log(lvl, msg)
 	_, err := cfg.K8sClient.EventsV1().Events(cfg.Namespace).Create(ctx, &evt, metav1.CreateOptions{})
 	if err != nil {
 		log.Errorf("Couldn't create event: %s\n due to %v", msg, err)

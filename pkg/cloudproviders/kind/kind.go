@@ -10,7 +10,7 @@ import (
 type KindCloudProvider struct {
 }
 
-func CreateAwsCloudProvider(ctx context.Context) (KindCloudProvider, error) {
+func CreateCloudProvider(ctx context.Context) (KindCloudProvider, error) {
 	ret := KindCloudProvider{}
 
 	return ret, nil

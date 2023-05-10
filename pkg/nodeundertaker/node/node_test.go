@@ -2,15 +2,21 @@ package node
 
 import (
 	"context"
+	"fmt"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders/kwok"
 	mockcloudproviders "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders/mocks"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	appsv1 "k8s.io/api/apps/v1"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/rand"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
 	"time"
@@ -607,4 +613,109 @@ func TestGetKind(t *testing.T) {
 	n := CreateNode(&v1node)
 	ret := n.GetKind()
 	assert.Equal(t, expectedKind, ret)
+}
+
+func TestDrain(t *testing.T) {
+	// setup
+	ctx := context.TODO()
+	kwokProvider, err := kwok.CreateCloudProvider(ctx)
+	require.NoError(t, err)
+
+	clientset, err := kwok.StartCluster(t, ctx)
+	require.NoError(t, err)
+	kwokProvider.K8sClient = clientset
+
+	nodeName := fmt.Sprintf("kwok-test-drain-node-%s", rand.String(20))
+	replicaCount := 10
+
+	err = kwokProvider.CreateNode(ctx, nodeName)
+	assert.NoError(t, err)
+
+	err = createDeployment(t, ctx, clientset, "test-deployment1", v1.NamespaceDefault, "pause", int32(replicaCount))
+	require.NoError(t, err)
+
+	nodePodsBefore, err := clientset.CoreV1().Pods(v1.NamespaceDefault).List(ctx, metav1.ListOptions{
+		FieldSelector: "spec.nodeName=" + nodeName,
+	})
+	assert.NoError(t, err)
+	assert.Len(t, nodePodsBefore.Items, replicaCount)
+
+	cfg := config.Config{
+		K8sClient:             clientset,
+		CloudTerminationDelay: 30,
+	}
+
+	// block node from rescheduling pods
+	nodev1, err := kwokProvider.K8sClient.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
+	require.NoError(t, err)
+	node := CreateNode(nodev1)
+	node.Taint()
+	err = node.Save(ctx, &cfg)
+	require.NoError(t, err)
+
+	// drain
+	err = node.Drain(ctx, &cfg)
+	assert.NoError(t, err)
+
+	ret, err := kwokProvider.K8sClient.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
+	assert.NoError(t, err)
+	assert.NotNil(t, ret)
+	assert.Equal(t, nodeName, nodev1.ObjectMeta.Name)
+	assert.Equal(t, fmt.Sprintf("kwok://%s", nodeName), ret.Spec.ProviderID)
+
+	nodePodsAfter, err := clientset.CoreV1().Pods(v1.NamespaceDefault).List(ctx, metav1.ListOptions{
+		FieldSelector: "spec.nodeName=" + nodeName,
+	})
+	assert.NoError(t, err)
+	assert.Len(t, nodePodsAfter.Items, 0)
+}
+
+// createDeployment creates deployment and waits until it has all pods ready
+func createDeployment(t *testing.T, ctx context.Context, clientset *kubernetes.Clientset, name, namespace, image string, replicas int32) error {
+	t.Helper()
+	deploy := appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": name,
+				},
+			},
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": name,
+					},
+				},
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						{
+							Name:  name,
+							Image: image,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	_, err := clientset.AppsV1().Deployments(namespace).Create(ctx, &deploy, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+	wait.PollUntilContextTimeout(ctx, time.Second, 30*time.Second, true, func(context.Context) (bool, error) {
+		dep, err := clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			return false, err
+		}
+		if dep.Status.ReadyReplicas == *dep.Spec.Replicas {
+			return true, nil
+		}
+		return false, nil
+	})
+
+	return nil
 }
