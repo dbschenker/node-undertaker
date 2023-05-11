@@ -52,6 +52,8 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 				return
 			}
 			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "TaintRemoval", "Succeeded", "", "")
+		} else {
+			log.Debugf("Node %s has fresh lease", n.GetName())
 		}
 	} else { // node has old lease
 		switch label := nodeLabel; label {
