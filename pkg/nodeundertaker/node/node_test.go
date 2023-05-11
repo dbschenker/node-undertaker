@@ -636,7 +636,7 @@ func TestDrain(t *testing.T) {
 
 	err = createDeployment(t, ctx, clientset, deploymentName, v1.NamespaceDefault, "pause", int32(replicaCount))
 	require.NoError(t, err)
-	err = waitForDeploymentReadyPods(ctx, clientset, 60*time.Second, deploymentName, v1.NamespaceDefault, replicaCount)
+	err = waitForDeploymentPodsReady(ctx, clientset, 60*time.Second, deploymentName, v1.NamespaceDefault, replicaCount)
 	require.NoError(t, err)
 
 	nodePodsBefore, err := clientset.CoreV1().Pods(v1.NamespaceDefault).List(ctx, metav1.ListOptions{
@@ -662,7 +662,7 @@ func TestDrain(t *testing.T) {
 	node.StartDrain(ctx, &cfg)
 	assert.NoError(t, err)
 
-	err = waitForDeploymentReadyPods(ctx, clientset, 60*time.Second, deploymentName, v1.NamespaceDefault, 0)
+	err = waitForDeploymentPodsReady(ctx, clientset, 60*time.Second, deploymentName, v1.NamespaceDefault, 0)
 	require.NoError(t, err)
 
 	ret, err := kwokProvider.K8sClient.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
@@ -697,7 +697,7 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 
 	err = createDeployment(t, ctx, clientset, deploymentName, v1.NamespaceDefault, "pause", int32(replicaCount))
 	require.NoError(t, err)
-	err = waitForDeploymentReadyPods(ctx, clientset, 60*time.Second, deploymentName, v1.NamespaceDefault, replicaCount)
+	err = waitForDeploymentPodsReady(ctx, clientset, 60*time.Second, deploymentName, v1.NamespaceDefault, replicaCount)
 	require.NoError(t, err)
 
 	pdpbMaxUnavail := intstr.FromInt(0)
@@ -791,7 +791,7 @@ func createDeployment(t *testing.T, ctx context.Context, clientset *kubernetes.C
 	return err
 }
 
-func waitForDeploymentReadyPods(ctx context.Context, clientset *kubernetes.Clientset, duration time.Duration, name, namespace string, requiredNumber int) error {
+func waitForDeploymentPodsReady(ctx context.Context, clientset *kubernetes.Clientset, duration time.Duration, name, namespace string, requiredNumber int) error {
 	return wait.PollUntilContextTimeout(ctx, time.Second, duration, true,
 		func(context.Context) (bool, error) {
 			dep, err := clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
