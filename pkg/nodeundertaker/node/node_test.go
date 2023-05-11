@@ -647,7 +647,7 @@ func TestDrain(t *testing.T) {
 
 	cfg := config.Config{
 		K8sClient:             clientset,
-		CloudTerminationDelay: 60,
+		CloudTerminationDelay: 300,
 	}
 
 	// block node from rescheduling pods
