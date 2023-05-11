@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"os"
 	"os/signal"
@@ -32,6 +33,11 @@ func Execute() error {
 	defer cancel()
 	cancelOnSigterm(cancel)
 
+	return executeWithContext(ctx, kubeclient.GetClient)
+
+}
+
+func executeWithContext(ctx context.Context, getk8sClient func() (kubernetes.Interface, string, error)) error {
 	// initialize config
 	cfg, err := config.GetConfig()
 	if err != nil {
@@ -48,19 +54,11 @@ func Execute() error {
 	cfg.CloudProvider = cloudProvider
 
 	// k8s ClientSet
-	k8sClient, namespace, err := kubeclient.GetClient()
+	k8sClient, currentNamespace, err := getk8sClient()
 	if err != nil {
 		return err
 	}
-	cfg.K8sClient = k8sClient
-	if cfg.Namespace == "" {
-		log.Infof("Using autodetected namespace: %s", namespace)
-		cfg.Namespace = namespace
-	}
-	if cfg.LeaseLockNamespace == "" {
-		log.Infof("Using autodetected namespace for lease lock: %s", namespace)
-		cfg.LeaseLockNamespace = namespace
-	}
+	cfg.SetK8sClient(k8sClient, currentNamespace)
 
 	//observability (logging & monitoring http server setup)
 	observabilityServer := observability.GetDefaultObservabilityServer(cfg)

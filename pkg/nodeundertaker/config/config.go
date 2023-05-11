@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/cmd/node-undertaker/flags"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"k8s.io/client-go/kubernetes"
 	"os"
@@ -43,6 +44,18 @@ func GetConfig() (*Config, error) {
 	return &ret, validateConfig(&ret)
 }
 
+func (cfg *Config) SetK8sClient(k8sClient kubernetes.Interface, namespace string) {
+	cfg.K8sClient = k8sClient
+	if cfg.Namespace == "" {
+		log.Infof("Using autodetected namespace: %s", namespace)
+		cfg.Namespace = namespace
+	}
+	if cfg.LeaseLockNamespace == "" {
+		log.Infof("Using autodetected namespace for lease lock: %s", namespace)
+		cfg.LeaseLockNamespace = namespace
+	}
+}
+
 func validateConfig(cfg *Config) error {
 	if cfg.DrainDelay < 0 {
 		return fmt.Errorf("%s can't be lower than zero", flags.DrainDelayFlag)
@@ -58,8 +71,8 @@ func validateConfig(cfg *Config) error {
 		return fmt.Errorf("%s can't be empty", flags.LeaseLockNameFlag)
 	}
 
-	if cfg.Port <= 0 {
-		return fmt.Errorf("%s can't be lower or equal than zero", flags.PortFlag)
+	if cfg.Port < 0 {
+		return fmt.Errorf("%s can't be lower than zero", flags.PortFlag)
 	}
 
 	return nil

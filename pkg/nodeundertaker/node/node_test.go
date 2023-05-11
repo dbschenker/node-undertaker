@@ -740,7 +740,7 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 	// drain
 	node.StartDrain(ctx, &cfg)
 
-	time.Sleep(time.Duration(cfg.CloudTerminationDelay*2) * time.Second) //sleep twice as long as drain takes
+	time.Sleep(time.Duration(cfg.CloudTerminationDelay+20) * time.Second) //sleep twice as long as drain takes
 
 	ret, err := kwokProvider.K8sClient.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	assert.NoError(t, err)

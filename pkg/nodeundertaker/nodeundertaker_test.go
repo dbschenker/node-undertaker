@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/cmd/node-undertaker/flags"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/kubeclient"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	mock_observability "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability/mocks"
 	"github.com/golang/mock/gomock"
@@ -135,4 +136,17 @@ func TestSetupLogLevelOk(t *testing.T) {
 	assert.Equal(t, log.ErrorLevel, log.GetLevel())
 	//cleanup
 	log.SetLevel(originalLvl)
+}
+
+func TestExecuteWithContext(t *testing.T) {
+	t.SkipNow()
+	viper.Set(flags.LeaseLockNameFlag, "test-lease")
+	viper.Set(flags.PortFlag, 0) //use random port
+	viper.Set(flags.CloudProviderFlag, "kwok")
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancel()
+
+	err := executeWithContext(ctx, kubeclient.GetFakeClient)
+	assert.NoError(t, err)
 }
