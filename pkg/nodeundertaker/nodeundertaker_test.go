@@ -139,7 +139,6 @@ func TestSetupLogLevelOk(t *testing.T) {
 }
 
 func TestExecuteWithContext(t *testing.T) {
-	t.SkipNow()
 	viper.Set(flags.LeaseLockNameFlag, "test-lease")
 	viper.Set(flags.PortFlag, 0) //use random port
 	viper.Set(flags.CloudProviderFlag, "kwok")
