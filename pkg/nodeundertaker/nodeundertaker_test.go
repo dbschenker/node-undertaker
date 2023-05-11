@@ -3,9 +3,11 @@ package nodeundertaker
 import (
 	"context"
 	"fmt"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/cmd/node-undertaker/flags"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	mock_observability "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability/mocks"
 	"github.com/golang/mock/gomock"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/kubernetes/fake"
@@ -34,6 +36,24 @@ func TestGetCloudProviderUnknownProvider(t *testing.T) {
 func TestGetCloudProviderOk(t *testing.T) {
 	ctx := context.TODO()
 	viper.Set("cloud-provider", "aws")
+	cloudProvider, err := getCloudProvider(ctx)
+
+	assert.NotNil(t, cloudProvider)
+	assert.NoError(t, err)
+}
+
+func TestGetCloudProviderKindOk(t *testing.T) {
+	ctx := context.TODO()
+	viper.Set("cloud-provider", "kind")
+	cloudProvider, err := getCloudProvider(ctx)
+
+	assert.NotNil(t, cloudProvider)
+	assert.NoError(t, err)
+}
+
+func TestGetCloudProviderKwokOk(t *testing.T) {
+	ctx := context.TODO()
+	viper.Set("cloud-provider", "kwok")
 	cloudProvider, err := getCloudProvider(ctx)
 
 	assert.NotNil(t, cloudProvider)
@@ -90,4 +110,29 @@ func TestStartLogicNok(t *testing.T) {
 		},
 	)
 	assert.EqualError(t, res, errorMsg)
+}
+
+func TestCancelOnSigterm(t *testing.T) {
+	counter := 0
+	c := func() {
+		counter += 1
+	}
+	cancelOnSigterm(c)
+	assert.Equal(t, 0, counter)
+}
+
+func TestSetupLogLevelNok(t *testing.T) {
+	err := setupLogLevel()
+	assert.Error(t, err)
+}
+
+func TestSetupLogLevelOk(t *testing.T) {
+	originalLvl := log.GetLevel()
+	viper.Set(flags.LogLevelFlag, "error")
+	err := setupLogLevel()
+
+	assert.NoError(t, err)
+	assert.Equal(t, log.ErrorLevel, log.GetLevel())
+	//cleanup
+	log.SetLevel(originalLvl)
 }

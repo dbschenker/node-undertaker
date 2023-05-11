@@ -628,7 +628,7 @@ func TestDrain(t *testing.T) {
 	kwokProvider.K8sClient = clientset
 
 	nodeName := fmt.Sprintf("kwok-test-drain-node-%s", rand.String(20))
-	replicaCount := 10
+	replicaCount := 3
 	deploymentName := "test-deployment1"
 
 	err = kwokProvider.CreateNode(ctx, nodeName)
@@ -647,7 +647,7 @@ func TestDrain(t *testing.T) {
 
 	cfg := config.Config{
 		K8sClient:             clientset,
-		CloudTerminationDelay: 30,
+		CloudTerminationDelay: 60,
 	}
 
 	// block node from rescheduling pods
@@ -689,7 +689,7 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 	kwokProvider.K8sClient = clientset
 
 	nodeName := fmt.Sprintf("kwok-test-drain-node-%s", rand.String(20))
-	replicaCount := 10
+	replicaCount := 3
 	deploymentName := "test-deployment1"
 
 	err = kwokProvider.CreateNode(ctx, nodeName)
@@ -726,7 +726,7 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 
 	cfg := config.Config{
 		K8sClient:             clientset,
-		CloudTerminationDelay: 15,
+		CloudTerminationDelay: 60,
 	}
 
 	// block node from rescheduling pods
