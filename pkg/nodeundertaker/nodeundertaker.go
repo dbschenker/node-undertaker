@@ -33,11 +33,11 @@ func Execute() error {
 	defer cancel()
 	cancelOnSigterm(cancel)
 
-	return executeWithContext(ctx, kubeclient.GetClient)
+	return executeWithContext(ctx, kubeclient.GetClient, cancel)
 
 }
 
-func executeWithContext(ctx context.Context, getk8sClient func() (kubernetes.Interface, string, error)) error {
+func executeWithContext(ctx context.Context, getk8sClient func() (kubernetes.Interface, string, error), cancel func()) error {
 	// initialize config
 	cfg, err := config.GetConfig()
 	if err != nil {
@@ -70,7 +70,7 @@ func executeWithContext(ctx context.Context, getk8sClient func() (kubernetes.Int
 		if err != nil {
 			log.Errorf("couldn't start properly, due to %v", err)
 		}
-	})
+	}, cancel)
 	return nil
 }
 

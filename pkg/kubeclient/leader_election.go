@@ -8,11 +8,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
-	"os"
 	"time"
 )
 
-func LeaderElection(ctx context.Context, cfg *config.Config, workload func(ctx2 context.Context)) {
+func LeaderElection(ctx context.Context, cfg *config.Config, workload func(ctx2 context.Context), cancel func()) {
 	id := uuid.New().String()
 	log.Infof("Starting leader election with id: %s", id)
 
@@ -47,7 +46,8 @@ func LeaderElection(ctx context.Context, cfg *config.Config, workload func(ctx2 
 			OnStoppedLeading: func() {
 				// we can do cleanup here
 				log.Infof("leader lost: %s", id)
-				os.Exit(0)
+				//os.Exit(0)
+				cancel()
 			},
 			OnNewLeader: func(identity string) {
 				// we're notified when new leader elected

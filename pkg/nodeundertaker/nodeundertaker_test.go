@@ -147,6 +147,6 @@ func TestExecuteWithContext(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancel()
 
-	err := executeWithContext(ctx, kubeclient.GetFakeClient)
+	err := executeWithContext(ctx, kubeclient.GetFakeClient, cancel)
 	assert.NoError(t, err)
 }
