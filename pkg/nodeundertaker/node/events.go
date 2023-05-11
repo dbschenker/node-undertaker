@@ -22,15 +22,15 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE,
 	msg := msgOverride
 	if msg == "" {
 		if reasonDesc != "" {
-			msg = fmt.Sprintf("%s/%s: %s %s due to %s", n.GetKind(), n.GetName(), strings.ToTitle(action), strings.ToLower(reason), reasonDesc)
+			msg = fmt.Sprintf("%s/%s: %s %s due to %s", n.GetKind(), n.GetName(), action, strings.ToLower(reason), reasonDesc)
 		} else {
-			msg = fmt.Sprintf("%s/%s: %s %s", n.GetKind(), n.GetName(), strings.ToTitle(action), strings.ToLower(reason))
+			msg = fmt.Sprintf("%s/%s: %s %s", n.GetKind(), n.GetName(), action, strings.ToLower(reason))
 		}
 	}
-	var eventType string
+	var eventType string = ""
 	switch lvl {
 	case log.ErrorLevel:
-		eventType = "Error"
+		eventType = "Warning"
 	case log.WarnLevel:
 		eventType = "Warning"
 	case log.InfoLevel:
@@ -40,23 +40,24 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE,
 		return
 	}
 	evt := eventsv1.Event{
+		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("node-undertaker.%s", rand.String(16)),
 			Namespace: cfg.Namespace,
 		},
+		EventTime: microTime,
+		//Related: - second object related to event
+		ReportingController: ReportingController,
+		ReportingInstance:   cfg.Hostname,
+		Action:              action,
+		Reason:              reason,
 		Regarding: v1.ObjectReference{
 			Namespace: cfg.Namespace,
 			Name:      n.GetName(),
 			Kind:      n.GetKind(),
 		},
-		Action:    action,
-		Type:      eventType,
-		Reason:    reason,
-		EventTime: microTime,
-		//Related: - second object related to event
-		ReportingController: ReportingController,
-		ReportingInstance:   cfg.Hostname,
-		Note:                msg,
+		Note: msg,
+		Type: eventType,
 	}
 
 	log.StandardLogger().Log(lvl, msg)

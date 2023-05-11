@@ -647,7 +647,7 @@ func TestDrain(t *testing.T) {
 
 	cfg := config.Config{
 		K8sClient:             clientset,
-		CloudTerminationDelay: 300,
+		CloudTerminationDelay: 30,
 	}
 
 	// block node from rescheduling pods
@@ -661,6 +661,8 @@ func TestDrain(t *testing.T) {
 	// drain
 	node.StartDrain(ctx, &cfg)
 	assert.NoError(t, err)
+
+	time.Sleep(time.Duration(cfg.CloudTerminationDelay+20) * time.Second) //sleep longer than drain takes
 
 	err = waitForDeploymentPodsReady(ctx, clientset, 60*time.Second, deploymentName, v1.NamespaceDefault, 0)
 	require.NoError(t, err)
@@ -726,7 +728,7 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 
 	cfg := config.Config{
 		K8sClient:             clientset,
-		CloudTerminationDelay: 60,
+		CloudTerminationDelay: 30,
 	}
 
 	// block node from rescheduling pods
@@ -740,7 +742,7 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 	// drain
 	node.StartDrain(ctx, &cfg)
 
-	time.Sleep(time.Duration(cfg.CloudTerminationDelay+20) * time.Second) //sleep twice as long as drain takes
+	time.Sleep(time.Duration(cfg.CloudTerminationDelay+20) * time.Second) //sleep longer than drain takes
 
 	ret, err := kwokProvider.K8sClient.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	assert.NoError(t, err)

@@ -2,9 +2,11 @@ package node
 
 import (
 	"context"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders/kwok"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
@@ -42,7 +44,7 @@ func TestReportEvent(t *testing.T) {
 	assert.Equal(t, reason, ev.Reason)
 	assert.Equal(t, ReportingController, ev.ReportingController)
 	assert.Equal(t, hostname, ev.ReportingInstance)
-	assert.Equal(t, "Error", ev.Type)
+	assert.Equal(t, "Warning", ev.Type)
 	assert.NotEmpty(t, ev.Note)
 }
 
@@ -139,4 +141,45 @@ func TestReportEventUnsupportedLevel(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, events)
 	assert.Len(t, events.Items, 0)
+}
+
+func TestReportEventWithKwok(t *testing.T) {
+	namespace := "test"
+	nodeName := "test-node"
+	action := "DummyAction"
+	reason := "DummyReason"
+	hostname := "dummy-host"
+	reasonDesc := ""
+
+	ctx := context.TODO()
+
+	clientset, err := kwok.StartCluster(t, ctx)
+	require.NoError(t, err)
+
+	cfg := config.Config{
+		K8sClient: clientset,
+		Namespace: namespace,
+		Hostname:  hostname,
+	}
+
+	lvl := logrus.ErrorLevel
+	nodev1 := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+	}
+	node := CreateNode(&nodev1)
+	ReportEvent(ctx, &cfg, lvl, node, action, reason, reasonDesc, "")
+
+	events, err := cfg.K8sClient.EventsV1().Events(namespace).List(ctx, metav1.ListOptions{})
+	assert.NoError(t, err)
+	assert.NotNil(t, events)
+	assert.Len(t, events.Items, 1)
+	ev := events.Items[0]
+	assert.True(t, strings.HasPrefix(ev.ObjectMeta.Name, "node-undertaker."))
+	assert.Equal(t, namespace, ev.ObjectMeta.Namespace)
+	assert.Equal(t, action, ev.Action)
+	assert.Equal(t, reason, ev.Reason)
+	assert.Equal(t, ReportingController, ev.ReportingController)
+	assert.Equal(t, hostname, ev.ReportingInstance)
+	assert.Equal(t, "Warning", ev.Type)
+	assert.NotEmpty(t, ev.Note)
 }

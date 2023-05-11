@@ -36,7 +36,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 		if err != nil {
 			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, action, "Failed", err.Error(), "")
 		}
-		nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, action, "Succeeded", "", "")
+		nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, action, "Succeeded", "", "")
 		return
 	}
 
@@ -51,7 +51,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "TaintRemoval", "Failed", err.Error(), "")
 				return
 			}
-			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "TaintRemoval", "Succeeded", "", "")
+			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "TaintRemoval", "Succeeded", "", "")
 		} else {
 			log.Debugf("Node %s has fresh lease", n.GetName())
 		}
@@ -65,7 +65,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "LabeledUnhealthy", "Failed", err.Error(), "")
 				return
 			}
-			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "LabeledUnhealthy", "Succeeded", "", "")
+			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "LabeledUnhealthy", "Succeeded", "", "")
 		case nodepkg.NodeUnhealthy:
 			n.Taint()
 			n.SetActionTimestamp(time.Now())
@@ -76,7 +76,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Tainted", "Failed", err.Error(), "")
 				return
 			}
-			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Tainted", "Succeeded", "", "")
+			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Tainted", "Successfully tainted", "", "")
 		case nodepkg.NodeTainted:
 			nodeModificationTimestamp, err := n.GetActionTimestamp()
 			if err != nil {
@@ -98,7 +98,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Drain", "Failed", err.Error(), "")
 				return
 			}
-			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Drain", "Started", "", "")
+			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Drain", "Started", "", "")
 		case nodepkg.NodeDraining:
 			nodeModificationTimestamp, err := n.GetActionTimestamp()
 			if err != nil {
@@ -120,7 +120,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 				return
 			}
 
-			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Terminating", "Succeeded", "", "")
+			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Termination", "Marked for termination", "", "")
 		//case nodepkg.NodeTerminating: Shouldn't be handled here
 		default:
 			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "NodeUpdate", "Failed", fmt.Sprintf("unknown label value found: %s", label), "")
