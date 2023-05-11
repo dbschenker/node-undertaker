@@ -3,6 +3,7 @@ package kwok
 import (
 	"context"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"regexp"
@@ -13,6 +14,7 @@ type KwokCloudProvider struct {
 }
 
 func CreateCloudProvider(ctx context.Context) (KwokCloudProvider, error) {
+	log.Warnf("Kwok cloud provider should be used only for development and testing. This provider is not intended for production use.")
 	ret := KwokCloudProvider{}
 	var err error = nil
 

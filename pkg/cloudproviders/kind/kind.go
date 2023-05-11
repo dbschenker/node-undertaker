@@ -3,6 +3,7 @@ package kind
 import (
 	"context"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"os/exec"
 	"regexp"
 )
@@ -11,6 +12,7 @@ type KindCloudProvider struct {
 }
 
 func CreateCloudProvider(ctx context.Context) (KindCloudProvider, error) {
+	log.Warnf("Kind cloud provider should be used only for development and testing. This provider is not intended for production use.")
 	ret := KindCloudProvider{}
 
 	return ret, nil

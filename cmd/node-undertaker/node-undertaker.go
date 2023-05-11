@@ -34,7 +34,10 @@ func init() {
 
 	cobra.OnInitialize(initConfig)
 	//flags
-	flags.SetupFlags(rootCmd)
+	err := flags.SetupFlags(rootCmd)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func initConfig() {
