@@ -89,13 +89,13 @@ func TestNodeUpdateInternalNotGrownUp(t *testing.T) {
 
 // node grown up & with recent lease & no label - should do nothing
 func TestNodeUpdateInternalHealthyNoLabel(t *testing.T) {
-	//nodeName := "test-node1"
+	nodeName := "test-node1"
 	hasFreshLease := true
 	nodeLabel := nodepkg.NodeHealthy
 	var hasFreshLeaseErr error = nil
 	mockCtrl := gomock.NewController(t)
 	node := mocknode.NewMockNODE(mockCtrl)
-	//node.EXPECT().GetName().Return(nodeName).AnyTimes()
+	node.EXPECT().GetName().Return(nodeName).AnyTimes()
 
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
