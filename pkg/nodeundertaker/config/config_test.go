@@ -25,6 +25,7 @@ func TestValidateConfigOk(t *testing.T) {
 		DrainDelay:            1,
 		CloudTerminationDelay: 1,
 		Port:                  8080,
+		LeaseLockName:         "test",
 	}
 	err := validateConfig(cfg)
 	assert.NoError(t, err)
@@ -35,6 +36,7 @@ func TestValidateConfigErrDrainDelay(t *testing.T) {
 		DrainDelay:            -1,
 		CloudTerminationDelay: 1,
 		Port:                  8080,
+		LeaseLockName:         "test",
 	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)
@@ -45,6 +47,7 @@ func TestValidateConfigErrCloudTerminationDelay(t *testing.T) {
 		DrainDelay:            1,
 		CloudTerminationDelay: -1,
 		Port:                  8080,
+		LeaseLockName:         "test",
 	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)
@@ -56,6 +59,7 @@ func TestValidateConfigErrNodeInitialThreshold(t *testing.T) {
 		CloudTerminationDelay: 1,
 		NodeInitialThreshold:  -1,
 		Port:                  8080,
+		LeaseLockName:         "test",
 	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)
@@ -66,6 +70,18 @@ func TestValidateConfigErrPort(t *testing.T) {
 		DrainDelay:            1,
 		CloudTerminationDelay: 1,
 		Port:                  0,
+		LeaseLockName:         "test",
+	}
+	err := validateConfig(cfg)
+	assert.Error(t, err)
+}
+
+func TestValidateConfigErrLeaseName(t *testing.T) {
+	cfg := &Config{
+		DrainDelay:            1,
+		CloudTerminationDelay: 1,
+		Port:                  8080,
+		LeaseLockName:         "",
 	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)

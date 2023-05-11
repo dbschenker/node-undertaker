@@ -17,6 +17,9 @@ import (
 	"golang.org/x/sync/errgroup"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 // Execute executes node-undertaker logic
@@ -27,6 +30,7 @@ func Execute() error {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	cancelOnSigterm(cancel)
 
 	// initialize config
 	cfg, err := config.GetConfig()
@@ -53,15 +57,22 @@ func Execute() error {
 		log.Infof("Using autodetected namespace: %s", namespace)
 		cfg.Namespace = namespace
 	}
+	if cfg.LeaseLockNamespace == "" {
+		log.Infof("Using autodetected namespace for lease lock: %s", namespace)
+		cfg.LeaseLockNamespace = namespace
+	}
+
 	//observability (logging & monitoring http server setup)
 	observabilityServer := observability.GetDefaultObservabilityServer(cfg)
 	observabilityServer.SetupRoutes()
 
 	// start logic
-	err = startLogic(ctx, cfg, nodeupdatehandler.GetDefaultUpdateHandlerFuncs(ctx, cfg), observabilityServer)
-	if err != nil {
-		log.Errorf("couldn't start properly, due to %v", err)
-	}
+	kubeclient.LeaderElection(ctx, cfg, func(ctx1 context.Context) {
+		err = startLogic(ctx1, cfg, nodeupdatehandler.GetDefaultUpdateHandlerFuncs(ctx1, cfg), observabilityServer)
+		if err != nil {
+			log.Errorf("couldn't start properly, due to %v", err)
+		}
+	})
 	return nil
 }
 
@@ -115,4 +126,14 @@ func getCloudProvider(ctx context.Context) (cloudproviders.CLOUDPROVIDER, error)
 		return nil, fmt.Errorf("Unknown cloud provider: %s", cloudProviderName)
 	}
 
+}
+
+func cancelOnSigterm(cancel func()) {
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-ch
+		log.Info("Received termination, signaling shutdown")
+		cancel()
+	}()
 }

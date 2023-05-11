@@ -20,6 +20,8 @@ type Config struct {
 	InformerResync        time.Duration
 	Namespace             string
 	Hostname              string
+	LeaseLockName         string
+	LeaseLockNamespace    string
 }
 
 func GetConfig() (*Config, error) {
@@ -28,7 +30,9 @@ func GetConfig() (*Config, error) {
 	ret.DrainDelay = viper.GetInt(flags.DrainDelayFlag)
 	ret.CloudTerminationDelay = viper.GetInt(flags.CloudTerminationDelayFlag)
 	ret.Port = viper.GetInt(flags.PortFlag)
-	namespace := viper.GetString(flags.NamespaceFlag)
+	ret.Namespace = viper.GetString(flags.NamespaceFlag)
+	ret.LeaseLockNamespace = viper.GetString(flags.LeaseLockNamespaceFlag)
+	ret.LeaseLockName = viper.GetString(flags.LeaseLockNameFlag)
 
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -36,7 +40,6 @@ func GetConfig() (*Config, error) {
 	}
 	ret.Hostname = hostname
 
-	ret.Namespace = namespace
 	return &ret, validateConfig(&ret)
 }
 
@@ -49,6 +52,10 @@ func validateConfig(cfg *Config) error {
 	}
 	if cfg.NodeInitialThreshold < 0 {
 		return fmt.Errorf("%s can't be lower than zero", flags.NodeInitialThresholdFlag)
+	}
+
+	if cfg.LeaseLockName == "" {
+		return fmt.Errorf("%s can't be empty", flags.LeaseLockNameFlag)
 	}
 
 	if cfg.Port <= 0 {

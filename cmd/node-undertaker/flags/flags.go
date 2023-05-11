@@ -14,6 +14,8 @@ const (
 	PortFlag                  = "port"
 	NodeInitialThresholdFlag  = "node-initial-threshold"
 	NamespaceFlag             = "namespace"
+	LeaseLockNameFlag         = "lease-lock-name"
+	LeaseLockNamespaceFlag    = "lease-lock-namespace"
 )
 
 func SetupFlags(cmd *cobra.Command) error {
@@ -53,6 +55,18 @@ func SetupFlags(cmd *cobra.Command) error {
 	if err != nil {
 		return (err)
 	}
+
+	cmd.PersistentFlags().String(LeaseLockNamespaceFlag, "", "Namespace containing leader election lease. Default: '' - which is the same namespace node-undertaker runs. Can be set using LEASE_LOCK_NAMESPACE env variable")
+	err = viper.BindPFlag(LeaseLockNamespaceFlag, cmd.PersistentFlags().Lookup(LeaseLockNamespaceFlag))
+	if err != nil {
+		return (err)
+	}
+	cmd.PersistentFlags().String(LeaseLockNameFlag, "node-undertaker-leader-election", "Name of node-undertaker's leader election lease. Default: 'node-undertaker-leader-election'. Can be set using LEASE_LOCK_NAME env variable")
+	err = viper.BindPFlag(LeaseLockNameFlag, cmd.PersistentFlags().Lookup(LeaseLockNameFlag))
+	if err != nil {
+		return (err)
+	}
+
 	return nil
 }
 

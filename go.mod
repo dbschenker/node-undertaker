@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.93.2
 	github.com/docker/go-connections v0.4.0
 	github.com/golang/mock v1.6.0
+	github.com/google/uuid v1.3.0
 	github.com/prometheus/client_golang v1.14.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.7.0
@@ -18,6 +19,7 @@ require (
 	k8s.io/apimachinery v0.27.1
 	k8s.io/client-go v0.27.1
 	k8s.io/cloud-provider-aws v1.27.1
+	k8s.io/klog/v2 v2.90.1
 	k8s.io/kubectl v0.27.1
 )
 
@@ -65,7 +67,6 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.15 // indirect
@@ -128,7 +129,6 @@ require (
 	k8s.io/component-base v0.27.1 // indirect
 	k8s.io/component-helpers v0.27.1 // indirect
 	k8s.io/csi-translation-lib v0.27.0 // indirect
-	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230327201221-f5883ff37f0c // indirect
 	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
