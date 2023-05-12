@@ -807,3 +807,19 @@ func waitForDeploymentPodsReady(ctx context.Context, clientset *kubernetes.Clien
 	)
 
 }
+
+func TestSetActionTimestamp(t *testing.T) {
+	v1node := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "dummy",
+		},
+	}
+	timeNow := time.Now()
+	n := CreateNode(&v1node)
+	n.SetActionTimestamp(timeNow)
+
+	ret, exists := n.ObjectMeta.Annotations[TimestampAnnotation]
+	assert.Equal(t, timeNow.Format(time.RFC3339), ret)
+	assert.True(t, exists)
+	assert.True(t, n.changed)
+}
