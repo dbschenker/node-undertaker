@@ -32,11 +32,11 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 	nodeLabel := n.GetLabel()
 
 	if nodeLabel == nodepkg.NodeTerminating {
-		action, err := n.Terminate(ctx, cfg)
+		reason, err := n.Terminate(ctx, cfg)
 		if err != nil {
-			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, action, "Failed", err.Error(), "")
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Termination", reason, err.Error(), "")
 		}
-		nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, action, "Succeeded", "", "")
+		nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Termination", reason, "", "")
 		return
 	}
 
@@ -48,12 +48,12 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 			err := n.Save(ctx, cfg)
 			if err != nil {
 				log.Errorf("Received error while saving node %s: %v", n.GetName(), err)
-				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "TaintRemoval", "Failed", err.Error(), "")
+				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Untaint", "Untaint failed", err.Error(), "")
 				return
 			}
-			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "TaintRemoval", "Succeeded", "", "")
+			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Untaint", "Untainted", "", "")
 		} else {
-			log.Debugf("Node %s has fresh lease", n.GetName())
+			log.Debugf("%s/%s: has fresh lease", n.GetKind(), n.GetName())
 		}
 	} else { // node has old lease
 		switch label := nodeLabel; label {
@@ -62,10 +62,10 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 			err := n.Save(ctx, cfg)
 			if err != nil {
 				log.Errorf("Received error while saving node %s: %v", n.GetName(), err)
-				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "LabeledUnhealthy", "Failed", err.Error(), "")
+				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Label", "Label unhealthy failed", err.Error(), "")
 				return
 			}
-			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "LabeledUnhealthy", "Succeeded", "", "")
+			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "LabeledUnhealthy", "Labeled unhealthy", "", "")
 		case nodepkg.NodeUnhealthy:
 			n.Taint()
 			n.SetActionTimestamp(time.Now())
@@ -76,7 +76,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Tainted", "Failed", err.Error(), "")
 				return
 			}
-			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Tainted", "Successfully tainted", "", "")
+			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Taint", "Tainted", "", "")
 		case nodepkg.NodeTainted:
 			nodeModificationTimestamp, err := n.GetActionTimestamp()
 			if err != nil {
@@ -85,7 +85,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 			}
 			timestampShouldBeBefore := time.Now().Add(-time.Duration(cfg.DrainDelay) * time.Second)
 			if nodeModificationTimestamp.After(timestampShouldBeBefore) {
-				log.Infof("Node %s tainted too recently", n.GetName())
+				log.Infof("%s/%s: tainted too recently", n.GetKind(), n.GetName())
 				return
 			}
 
@@ -95,10 +95,10 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 			err = n.Save(ctx, cfg)
 			if err != nil {
 				log.Errorf("Received error while saving node %s: %v", n.GetName(), err)
-				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Drain", "Failed", err.Error(), "")
+				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Drain", "Drain Failed", err.Error(), "")
 				return
 			}
-			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Drain", "Started", "", "")
+			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Drain", "Drain started", "", "")
 		case nodepkg.NodeDraining:
 			nodeModificationTimestamp, err := n.GetActionTimestamp()
 			if err != nil {
@@ -107,7 +107,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 			}
 			timestampShouldBeBefore := time.Now().Add(-time.Duration(cfg.CloudTerminationDelay) * time.Second)
 			if nodeModificationTimestamp.After(timestampShouldBeBefore) {
-				log.Infof("Node %s tainted too recently", n.GetName())
+				log.Infof("%s/%s: drained too recently", n.GetKind(), n.GetName())
 				return
 			}
 
@@ -116,7 +116,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 			err = n.Save(ctx, cfg)
 			if err != nil {
 				log.Errorf("Received error while saving node %s: %v", n.GetName(), err)
-				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Saving", "Failed", err.Error(), "")
+				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Label", "Label Terminating Failed", err.Error(), "")
 				return
 			}
 
