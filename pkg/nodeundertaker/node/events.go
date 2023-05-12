@@ -22,9 +22,9 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE,
 	msg := msgOverride
 	if msg == "" {
 		if reasonDesc != "" {
-			msg = fmt.Sprintf("%s/%s: %s %s due to %s", n.GetKind(), n.GetName(), action, strings.ToLower(reason), reasonDesc)
+			msg = fmt.Sprintf("%s/%s: %s due to %s", n.GetKind(), n.GetName(), strings.ToLower(reason), reasonDesc)
 		} else {
-			msg = fmt.Sprintf("%s/%s: %s %s", n.GetKind(), n.GetName(), action, strings.ToLower(reason))
+			msg = fmt.Sprintf("%s/%s: %s", n.GetKind(), n.GetName(), strings.ToLower(reason))
 		}
 	}
 	var eventType string = ""

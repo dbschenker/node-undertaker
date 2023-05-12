@@ -85,7 +85,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 			}
 			timestampShouldBeBefore := time.Now().Add(-time.Duration(cfg.DrainDelay) * time.Second)
 			if nodeModificationTimestamp.After(timestampShouldBeBefore) {
-				log.Infof("%s/%s: tainted too recently", n.GetKind(), n.GetName())
+				log.Infof("%s/%s: tainted less than %d seconds ago", n.GetKind(), n.GetName(), cfg.DrainDelay)
 				return
 			}
 
@@ -107,7 +107,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 			}
 			timestampShouldBeBefore := time.Now().Add(-time.Duration(cfg.CloudTerminationDelay) * time.Second)
 			if nodeModificationTimestamp.After(timestampShouldBeBefore) {
-				log.Infof("%s/%s: drained too recently", n.GetKind(), n.GetName())
+				log.Infof("%s/%s: drained less than %d seconds ago", n.GetKind(), n.GetName(), cfg.CloudTerminationDelay)
 				return
 			}
 
