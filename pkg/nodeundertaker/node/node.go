@@ -61,6 +61,9 @@ func CreateNode(n *v1.Node) *Node {
 	if node.Labels == nil {
 		node.Labels = make(map[string]string)
 	}
+	if node.Annotations == nil {
+		node.Annotations = make(map[string]string)
+	}
 	return &node
 }
 
