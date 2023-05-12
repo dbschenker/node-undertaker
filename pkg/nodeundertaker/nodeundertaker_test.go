@@ -2,6 +2,7 @@ package nodeundertaker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/cmd/node-undertaker/flags"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/kubeclient"
@@ -11,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/cache"
 	"testing"
@@ -153,4 +155,18 @@ func TestExecuteWithContext(t *testing.T) {
 
 	err := executeWithContext(ctx, kubeclient.GetFakeClient, cancel)
 	assert.NoError(t, err)
+}
+
+func TestExecuteWithContextK8sErr(t *testing.T) {
+	viper.Set(flags.LeaseLockNameFlag, "test-lease")
+	viper.Set(flags.PortFlag, 0) //use random port
+	viper.Set(flags.CloudProviderFlag, "kwok")
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancel()
+
+	err := executeWithContext(ctx, func() (kubernetes.Interface, string, error) {
+		return nil, "", errors.New("test error")
+	}, cancel)
+	assert.Error(t, err)
 }

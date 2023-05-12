@@ -15,7 +15,7 @@ type readiness struct {
 
 func LivenessProbe(w http.ResponseWriter, r *http.Request) {
 	ret := liveness{Healthy: true}
-	// TODO check if alive
+
 	resp, err := json.Marshal(ret)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -27,7 +27,7 @@ func LivenessProbe(w http.ResponseWriter, r *http.Request) {
 
 func ReadinessProbe(w http.ResponseWriter, r *http.Request) {
 	ret := readiness{Ready: true}
-	// TODO check if ready
+
 	resp, err := json.Marshal(ret)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
