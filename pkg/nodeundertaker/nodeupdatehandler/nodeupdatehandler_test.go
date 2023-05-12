@@ -96,6 +96,7 @@ func TestNodeUpdateInternalHealthyNoLabel(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	node := mocknode.NewMockNODE(mockCtrl)
 	node.EXPECT().GetName().Return(nodeName).AnyTimes()
+	node.EXPECT().GetKind().Return("Node").AnyTimes()
 
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
