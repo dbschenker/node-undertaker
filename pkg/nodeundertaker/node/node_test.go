@@ -620,12 +620,16 @@ func TestGetKind(t *testing.T) {
 func TestDrain(t *testing.T) {
 	// setup
 	ctx := context.TODO()
-	kwokProvider, err := kwok.CreateCloudProvider(ctx)
-	require.NoError(t, err)
-
 	clientset, err := kwok.StartCluster(t, ctx)
 	require.NoError(t, err)
-	kwokProvider.K8sClient = clientset
+
+	cfg := config.Config{
+		K8sClient:             clientset,
+		CloudTerminationDelay: 30,
+	}
+
+	kwokProvider, err := kwok.CreateCloudProvider(ctx, &cfg)
+	require.NoError(t, err)
 
 	nodeName := fmt.Sprintf("kwok-test-drain-node-%s", rand.String(20))
 	replicaCount := 3
@@ -644,11 +648,6 @@ func TestDrain(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Len(t, nodePodsBefore.Items, replicaCount)
-
-	cfg := config.Config{
-		K8sClient:             clientset,
-		CloudTerminationDelay: 30,
-	}
 
 	// block node from rescheduling pods
 	nodev1, err := kwokProvider.K8sClient.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
@@ -683,12 +682,17 @@ func TestDrain(t *testing.T) {
 func TestDrainWithBlockingPDB(t *testing.T) {
 	// setup
 	ctx := context.TODO()
-	kwokProvider, err := kwok.CreateCloudProvider(ctx)
-	require.NoError(t, err)
 
 	clientset, err := kwok.StartCluster(t, ctx)
 	require.NoError(t, err)
-	kwokProvider.K8sClient = clientset
+
+	cfg := config.Config{
+		K8sClient:             clientset,
+		CloudTerminationDelay: 30,
+	}
+
+	kwokProvider, err := kwok.CreateCloudProvider(ctx, &cfg)
+	require.NoError(t, err)
 
 	nodeName := fmt.Sprintf("kwok-test-drain-node-%s", rand.String(20))
 	replicaCount := 3
@@ -725,11 +729,6 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Len(t, nodePodsBefore.Items, replicaCount)
-
-	cfg := config.Config{
-		K8sClient:             clientset,
-		CloudTerminationDelay: 30,
-	}
 
 	// block node from rescheduling pods
 	nodev1, err := kwokProvider.K8sClient.CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})

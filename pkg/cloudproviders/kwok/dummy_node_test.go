@@ -3,6 +3,7 @@ package kwok
 import (
 	"context"
 	"fmt"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,14 +13,17 @@ import (
 
 func TestCreateNode(t *testing.T) {
 	ctx := context.TODO()
-	kwokProvider, err := CreateCloudProvider(ctx)
-	require.NoError(t, err)
-
-	nodeName := fmt.Sprintf("kwok-test-create-node-%s", rand.String(20))
 
 	clientset, err := StartCluster(t, ctx)
 	require.NoError(t, err)
-	kwokProvider.K8sClient = clientset
+
+	cfg := config.Config{
+		K8sClient: clientset,
+	}
+	kwokProvider, err := CreateCloudProvider(ctx, &cfg)
+	require.NoError(t, err)
+
+	nodeName := fmt.Sprintf("kwok-test-create-node-%s", rand.String(20))
 
 	err = kwokProvider.CreateNode(ctx, nodeName)
 	assert.NoError(t, err)

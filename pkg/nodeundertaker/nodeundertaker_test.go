@@ -19,7 +19,8 @@ import (
 
 func TestGetCloudProviderNoProvider(t *testing.T) {
 	ctx := context.TODO()
-	cloudProvider, err := getCloudProvider(ctx)
+	cfg := config.Config{}
+	cloudProvider, err := getCloudProvider(ctx, &cfg)
 
 	assert.Nil(t, cloudProvider)
 	assert.Error(t, err)
@@ -27,8 +28,9 @@ func TestGetCloudProviderNoProvider(t *testing.T) {
 
 func TestGetCloudProviderUnknownProvider(t *testing.T) {
 	ctx := context.TODO()
+	cfg := config.Config{}
 	viper.Set("cloud-provider", "unknown")
-	cloudProvider, err := getCloudProvider(ctx)
+	cloudProvider, err := getCloudProvider(ctx, &cfg)
 
 	assert.Nil(t, cloudProvider)
 	assert.Error(t, err)
@@ -36,8 +38,9 @@ func TestGetCloudProviderUnknownProvider(t *testing.T) {
 
 func TestGetCloudProviderOk(t *testing.T) {
 	ctx := context.TODO()
+	cfg := config.Config{}
 	viper.Set("cloud-provider", "aws")
-	cloudProvider, err := getCloudProvider(ctx)
+	cloudProvider, err := getCloudProvider(ctx, &cfg)
 
 	assert.NotNil(t, cloudProvider)
 	assert.NoError(t, err)
@@ -45,8 +48,9 @@ func TestGetCloudProviderOk(t *testing.T) {
 
 func TestGetCloudProviderKindOk(t *testing.T) {
 	ctx := context.TODO()
+	cfg := config.Config{}
 	viper.Set("cloud-provider", "kind")
-	cloudProvider, err := getCloudProvider(ctx)
+	cloudProvider, err := getCloudProvider(ctx, &cfg)
 
 	assert.NotNil(t, cloudProvider)
 	assert.NoError(t, err)
@@ -54,8 +58,9 @@ func TestGetCloudProviderKindOk(t *testing.T) {
 
 func TestGetCloudProviderKwokOk(t *testing.T) {
 	ctx := context.TODO()
+	cfg := config.Config{}
 	viper.Set("cloud-provider", "kwok")
-	cloudProvider, err := getCloudProvider(ctx)
+	cloudProvider, err := getCloudProvider(ctx, &cfg)
 
 	assert.NotNil(t, cloudProvider)
 	assert.NoError(t, err)

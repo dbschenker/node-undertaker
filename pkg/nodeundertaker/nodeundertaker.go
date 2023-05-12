@@ -40,10 +40,18 @@ func Execute() error {
 func executeWithContext(ctx context.Context, getk8sClient func() (kubernetes.Interface, string, error), cancel func()) error {
 	// initialize config
 	cfg, err := config.GetConfig()
+
+	// k8s ClientSet
+	k8sClient, currentNamespace, err := getk8sClient()
 	if err != nil {
 		return err
 	}
-	cloudProvider, err := getCloudProvider(ctx)
+	cfg.SetK8sClient(k8sClient, currentNamespace)
+
+	if err != nil {
+		return err
+	}
+	cloudProvider, err := getCloudProvider(ctx, cfg)
 	if err != nil {
 		return err
 	}
@@ -52,13 +60,6 @@ func executeWithContext(ctx context.Context, getk8sClient func() (kubernetes.Int
 		return err
 	}
 	cfg.CloudProvider = cloudProvider
-
-	// k8s ClientSet
-	k8sClient, currentNamespace, err := getk8sClient()
-	if err != nil {
-		return err
-	}
-	cfg.SetK8sClient(k8sClient, currentNamespace)
 
 	//observability (logging & monitoring http server setup)
 	observabilityServer := observability.GetDefaultObservabilityServer(cfg)
@@ -108,7 +109,7 @@ func startLogic(ctx context.Context, cfg *config.Config, handlerFuncs cache.Reso
 	return g.Wait()
 }
 
-func getCloudProvider(ctx context.Context) (cloudproviders.CLOUDPROVIDER, error) {
+func getCloudProvider(ctx context.Context, cfg *config.Config) (cloudproviders.CLOUDPROVIDER, error) {
 	switch cloudProviderName := viper.GetString(flags.CloudProviderFlag); cloudProviderName {
 	case "aws":
 		cloudProvider, err := aws.CreateCloudProvider(ctx)
@@ -118,7 +119,7 @@ func getCloudProvider(ctx context.Context) (cloudproviders.CLOUDPROVIDER, error)
 		return cloudProvider, err
 
 	case "kwok":
-		cloudProvider, err := kwok.CreateCloudProvider(ctx)
+		cloudProvider, err := kwok.CreateCloudProvider(ctx, cfg)
 		return cloudProvider, err
 	default:
 		return nil, fmt.Errorf("Unknown cloud provider: %s", cloudProviderName)

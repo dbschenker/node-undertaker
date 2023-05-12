@@ -3,6 +3,7 @@ package kwok
 import (
 	"context"
 	"fmt"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/util/rand"
@@ -10,23 +11,29 @@ import (
 )
 
 func TestCreateCloudProvider(t *testing.T) {
-	_, err := CreateCloudProvider(context.TODO())
+	cfg := config.Config{}
+	_, err := CreateCloudProvider(context.TODO(), &cfg)
 	assert.NoError(t, err)
 }
 
 func TestValidateConfig(t *testing.T) {
-	cp, err := CreateCloudProvider(context.TODO())
-	require.NoError(t, err)
-	err = cp.ValidateConfig()
+	ctx := context.TODO()
+	cfg := config.Config{}
+	cp, _ := CreateCloudProvider(ctx, &cfg)
+	err := cp.ValidateConfig()
 	assert.NoError(t, err)
 }
 
 func TestTerminateNode(t *testing.T) {
 	ctx := context.TODO()
-	cp, _ := CreateCloudProvider(ctx)
 	clientset, err := StartCluster(t, ctx)
 	require.NoError(t, err)
-	cp.K8sClient = clientset
+
+	cfg := config.Config{
+		K8sClient:             clientset,
+		CloudTerminationDelay: 30,
+	}
+	cp, _ := CreateCloudProvider(ctx, &cfg)
 
 	nodeName := fmt.Sprintf("kwok-test-terminate-node-%s", rand.String(20))
 
