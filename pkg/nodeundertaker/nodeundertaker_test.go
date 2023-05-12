@@ -130,14 +130,15 @@ func TestCancelOnSigterm(t *testing.T) {
 }
 
 func TestSetupLogLevelNok(t *testing.T) {
-	err := setupLogLevel()
+	err := setupLogging()
 	assert.Error(t, err)
 }
 
 func TestSetupLogLevelOk(t *testing.T) {
 	originalLvl := log.GetLevel()
 	viper.Set(flags.LogLevelFlag, "error")
-	err := setupLogLevel()
+	viper.Set(flags.LogFormatFlag, flags.LogFormatJson)
+	err := setupLogging()
 
 	assert.NoError(t, err)
 	assert.Equal(t, log.ErrorLevel, log.GetLevel())

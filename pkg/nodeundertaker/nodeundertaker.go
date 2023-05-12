@@ -25,7 +25,7 @@ import (
 
 // Execute executes node-undertaker logic
 func Execute() error {
-	err := setupLogLevel()
+	err := setupLogging()
 	if err != nil {
 		return err
 	}
@@ -75,12 +75,24 @@ func executeWithContext(ctx context.Context, getk8sClient func() (kubernetes.Int
 	return nil
 }
 
-func setupLogLevel() error {
+func setupLogging() error {
 	lvl, err := log.ParseLevel(viper.GetString(flags.LogLevelFlag))
 	if err != nil {
 		return err
 	}
 	log.SetLevel(lvl)
+	format := viper.GetString(flags.LogFormatFlag)
+	switch format {
+	case flags.LogFormatText:
+		log.SetFormatter(&log.TextFormatter{
+			FullTimestamp: true,
+		})
+	case flags.LogFormatJson:
+		log.SetFormatter(&log.JSONFormatter{})
+	default:
+		return fmt.Errorf("unknown log format: %s", format)
+	}
+
 	return nil
 }
 

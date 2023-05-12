@@ -1,6 +1,7 @@
 package flags
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -8,6 +9,7 @@ import (
 
 const (
 	LogLevelFlag              = "log-level"
+	LogFormatFlag             = "log-format"
 	CloudProviderFlag         = "cloud-provider"
 	DrainDelayFlag            = "drain-delay"
 	CloudTerminationDelayFlag = "cloud-termination-delay"
@@ -16,11 +18,18 @@ const (
 	NamespaceFlag             = "namespace"
 	LeaseLockNameFlag         = "lease-lock-name"
 	LeaseLockNamespaceFlag    = "lease-lock-namespace"
+	LogFormatJson             = "json"
+	LogFormatText             = "text"
 )
 
 func SetupFlags(cmd *cobra.Command) error {
 	cmd.PersistentFlags().String(LogLevelFlag, "info", "Log level [panic|fatal|error|warn|warning|info|debug|trace]. Default: 'info'. Can be set using LOG_LEVEL env variable")
 	err := viper.BindPFlag(LogLevelFlag, cmd.PersistentFlags().Lookup(LogLevelFlag))
+	if err != nil {
+		return err
+	}
+	cmd.PersistentFlags().String(LogFormatFlag, "text", "Log format [text|json]. Default: 'test'. Can be set using LOG_FORMAT env variable")
+	err = viper.BindPFlag(LogFormatFlag, cmd.PersistentFlags().Lookup(LogFormatFlag))
 	if err != nil {
 		return err
 	}
@@ -76,6 +85,11 @@ func ValidateRootFlags() error {
 	_, err := log.ParseLevel(viper.GetString(LogLevelFlag))
 	if err != nil {
 		return err
+	}
+
+	format := viper.GetString(LogFormatFlag)
+	if format != LogFormatJson && format != LogFormatText {
+		return fmt.Errorf("unknown log format: %s", format)
 	}
 
 	return nil
