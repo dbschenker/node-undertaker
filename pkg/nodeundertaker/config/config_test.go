@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/kubernetes/fake"
+	"os"
 	"testing"
 )
 
@@ -15,10 +16,33 @@ func TestGetConfigNegativeValidation(t *testing.T) {
 }
 
 func TestGetConfigOk(t *testing.T) {
-	viper.Set(flags.PortFlag, 1)
+	portValue := 1
+	drainDelay := 29
+	cloudTerminationDelay := 234
+	namespace := "ns1"
+	leaseLockNamespace := "ns2"
+	leaseLockName := "lease-lock1"
+	hostname, _ := os.Hostname()
+
+	viper.Set(flags.PortFlag, portValue)
+	viper.Set(flags.DrainDelayFlag, drainDelay)
+	viper.Set(flags.CloudTerminationDelayFlag, cloudTerminationDelay)
+	viper.Set(flags.LeaseLockNamespaceFlag, leaseLockNamespace)
+	viper.Set(flags.NamespaceFlag, namespace)
+	viper.Set(flags.LeaseLockNameFlag, leaseLockName)
+
 	ret, err := GetConfig()
-	assert.Error(t, err)
+
+	assert.NoError(t, err)
 	assert.NotNil(t, ret)
+	assert.Positive(t, ret.InformerResync)
+	assert.Equal(t, portValue, ret.Port)
+	assert.Equal(t, hostname, ret.Hostname)
+	assert.Equal(t, leaseLockName, ret.LeaseLockName)
+	assert.Equal(t, leaseLockNamespace, ret.LeaseLockNamespace)
+	assert.Equal(t, drainDelay, ret.DrainDelay)
+	assert.Equal(t, cloudTerminationDelay, ret.CloudTerminationDelay)
+	assert.Equal(t, namespace, ret.Namespace)
 }
 
 func TestValidateConfigOk(t *testing.T) {

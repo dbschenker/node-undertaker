@@ -33,7 +33,7 @@ kind:
 	kind create cluster --config example/kind/config.yaml
 
 local:
-	bin/node-undertaker --namespace node-undertaker --log-level=debug --cloud-provider=kwok --cloud-termination-delay=60 --drain-delay=60
+	bin/node-undertaker --namespace node-undertaker --log-level=debug --cloud-provider=kwok --cloud-termination-delay=120 --drain-delay=120
 
 kwok:
 	kwok create cluster

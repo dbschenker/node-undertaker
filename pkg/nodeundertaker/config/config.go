@@ -34,6 +34,7 @@ func GetConfig() (*Config, error) {
 	ret.Namespace = viper.GetString(flags.NamespaceFlag)
 	ret.LeaseLockNamespace = viper.GetString(flags.LeaseLockNamespaceFlag)
 	ret.LeaseLockName = viper.GetString(flags.LeaseLockNameFlag)
+	ret.NodeInitialThreshold = viper.GetInt(flags.NodeInitialThresholdFlag)
 
 	hostname, err := os.Hostname()
 	if err != nil {
