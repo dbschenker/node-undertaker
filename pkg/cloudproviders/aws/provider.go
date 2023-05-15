@@ -12,8 +12,8 @@ type AwsCloudProvider struct {
 }
 
 const (
-	TerminationEventActionFailed    = "InstanceTerminationFailed"
-	TerminationEventActionSucceeded = "InstanceTerminated"
+	TerminationEventActionFailed    = "Instance Termination Failed"
+	TerminationEventActionSucceeded = "Instance Terminated"
 )
 
 func CreateCloudProvider(ctx context.Context) (AwsCloudProvider, error) {

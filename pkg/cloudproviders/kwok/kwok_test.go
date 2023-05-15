@@ -42,6 +42,6 @@ func TestTerminateNode(t *testing.T) {
 
 	ret, err := cp.TerminateNode(ctx, fmt.Sprintf("kwok://%s", nodeName))
 	assert.NoError(t, err)
-	assert.Equal(t, "InstanceTerminated", ret)
+	assert.Equal(t, "Instance Terminated", ret)
 
 }

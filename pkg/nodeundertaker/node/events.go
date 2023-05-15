@@ -22,9 +22,9 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE,
 	msg := msgOverride
 	if msg == "" {
 		if reasonDesc != "" {
-			msg = fmt.Sprintf("%s/%s: %s due to %s", n.GetKind(), n.GetName(), strings.ToLower(reason), reasonDesc)
+			msg = fmt.Sprintf("%s due to %s", strings.ToLower(reason), reasonDesc)
 		} else {
-			msg = fmt.Sprintf("%s/%s: %s", n.GetKind(), n.GetName(), strings.ToLower(reason))
+			msg = strings.ToLower(reason)
 		}
 	}
 	var eventType string = ""
@@ -60,7 +60,7 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE,
 		Type: eventType,
 	}
 
-	log.StandardLogger().Log(lvl, msg)
+	log.StandardLogger().Log(lvl, fmt.Sprintf("%s/%s: %s", n.GetKind(), n.GetName(), msg))
 	_, err := cfg.K8sClient.EventsV1().Events(cfg.Namespace).Create(ctx, &evt, metav1.CreateOptions{})
 	if err != nil {
 		log.Errorf("Couldn't create event: %s\n due to %v", msg, err)

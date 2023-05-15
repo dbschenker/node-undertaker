@@ -18,7 +18,7 @@ func OnNodeUpdate(ctx context.Context, cfg *config.Config, nv1 *v1.Node) {
 
 func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE) {
 	if !n.IsGrownUp(cfg) {
-		log.Debugf("Node %s is not old enough - might be not fully initialized.", n.GetName())
+		log.Debugf("%s/%s: is not old enough (%d seconds) - might be not fully initialized.", n.GetKind(), n.GetName(), cfg.NodeInitialThreshold)
 		return
 	}
 
@@ -95,7 +95,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 			err = n.Save(ctx, cfg)
 			if err != nil {
 				log.Errorf("Received error while saving node %s: %v", n.GetName(), err)
-				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Drain", "Drain Failed", err.Error(), "")
+				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Drain", "Drain Start Failed", err.Error(), "")
 				return
 			}
 			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Drain", "Drain started", "", "")
@@ -120,10 +120,10 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 				return
 			}
 
-			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Termination", "Marked for termination", "", "")
+			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Termination", "Instance terminating", "", "")
 		//case nodepkg.NodeTerminating: Shouldn't be handled here
 		default:
-			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "NodeUpdate", "Failed", fmt.Sprintf("unknown label value found: %s", label), "")
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "NodeUpdate", "Node Update Failed", fmt.Sprintf("unknown label value found: %s", label), "")
 		}
 	}
 }

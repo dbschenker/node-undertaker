@@ -73,6 +73,7 @@ func TestNodeUpdateInternalNotGrownUp(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	node := mocknode.NewMockNODE(mockCtrl)
 	node.EXPECT().GetName().Return(nodeName)
+	node.EXPECT().GetKind().Return("Node").AnyTimes()
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(false).Times(1)
 
 	cfg := config.Config{

@@ -39,13 +39,13 @@ func (p KwokCloudProvider) TerminateNode(ctx context.Context, cloudProviderNodeI
 	}
 
 	if p.K8sClient == nil {
-		return "InstanceTerminationFailed", errors.New("K8sclient is nil")
+		return "Instance Termination Failed", errors.New("K8sclient is nil")
 	}
 
 	err = p.K8sClient.CoreV1().Nodes().Delete(ctx, matches[1], metav1.DeleteOptions{})
 
 	if err != nil {
-		return "InstanceTerminationFailed", err
+		return "Instance Termination Failed", err
 	}
-	return "InstanceTerminated", nil
+	return "Instance Terminated", nil
 }

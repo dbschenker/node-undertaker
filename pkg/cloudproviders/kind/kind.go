@@ -35,12 +35,12 @@ func (p KindCloudProvider) TerminateNode(ctx context.Context, cloudProviderNodeI
 	cmd := exec.Command("docker", "stop", matches[1])
 	err = cmd.Run()
 	if err != nil {
-		return "InstanceTerminationFailed", err
+		return "Instance Termination Failed", err
 	}
 	cmd = exec.Command("docker", "rm", matches[1])
 	err = cmd.Run()
 	if err != nil {
-		return "InstanceTerminationFailed", err
+		return "Instance Termination Failed", err
 	}
-	return "InstanceTerminated", nil
+	return "Instance Terminated", nil
 }

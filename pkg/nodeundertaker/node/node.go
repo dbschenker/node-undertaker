@@ -189,8 +189,10 @@ func (n *Node) StartDrain(ctx context.Context, cfg *config.Config) {
 	go func() {
 		err := drain.RunNodeDrain(&drainHelper, n.GetName())
 		if err != nil {
-			log.Errorf("error drainining node %s: %v", n.GetName(), err)
+			ReportEvent(ctx, cfg, log.ErrorLevel, n, "Drain", "Drain Failed", err.Error(), "")
+			return
 		}
+		ReportEvent(ctx, cfg, log.InfoLevel, n, "Drain", "Drain Completed", "", "")
 	}()
 
 }
