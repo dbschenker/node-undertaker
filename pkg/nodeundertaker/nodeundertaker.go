@@ -12,6 +12,7 @@ import (
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/nodeupdatehandler"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability"
+	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability/metrics"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -67,7 +68,7 @@ func executeWithContext(ctx context.Context, getk8sClient func() (kubernetes.Int
 
 	// start logic
 	kubeclient.LeaderElection(ctx, cfg, func(ctx1 context.Context) {
-		err = startLogic(ctx1, cfg, nodeupdatehandler.GetDefaultUpdateHandlerFuncs(ctx1, cfg), observabilityServer)
+		err = startLogic(ctx1, cfg, nodeupdatehandler.GetDefaultUpdateHandlerFuncs(ctx1, cfg), &observabilityServer)
 		if err != nil {
 			log.Errorf("couldn't start properly, due to %v", err)
 		}
@@ -102,6 +103,7 @@ func startLogic(ctx context.Context, cfg *config.Config, handlerFuncs cache.Reso
 	factory := informers.NewSharedInformerFactoryWithOptions(cfg.K8sClient, cfg.InformerResync)
 	nodeInformer := factory.Core().V1().Nodes()
 	informer := nodeInformer.Informer()
+	nodeLister := nodeInformer.Lister()
 
 	g.Go(func() error {
 		factory.Start(ctx.Done())
@@ -116,6 +118,9 @@ func startLogic(ctx context.Context, cfg *config.Config, handlerFuncs cache.Reso
 	if err != nil {
 		return err
 	}
+
+	unregisterMetrics := metrics.Initialize(nodeLister)
+	defer unregisterMetrics()
 
 	g.Go(func() error { return observabilityserver.StartServer(ctx) })
 	return g.Wait()
