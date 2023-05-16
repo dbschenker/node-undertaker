@@ -1,14 +1,15 @@
 package metrics
 
-//var AppStartCounter = prometheus.NewCounter(
-//	prometheus.CounterOpts{
-//		Namespace: "mytopic",
-//		Subsystem: "mysystem",
-//		Name:      "myapp",
-//		Help:      "Number of starts for this app",
-//	},
-//)
+import (
+	"github.com/prometheus/client_golang/prometheus"
+	v1 "k8s.io/client-go/listers/core/v1"
+)
 
-func Initialize() {
-	//prometheus.MustRegister(AppStartCounter)
+func Initialize(lister v1.NodeLister) func() {
+	nsc := CreateNodeStatusCollector(lister)
+	prometheus.MustRegister(nsc)
+
+	return func() {
+		prometheus.Unregister(nsc)
+	}
 }

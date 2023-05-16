@@ -626,6 +626,7 @@ func TestDrain(t *testing.T) {
 	cfg := config.Config{
 		K8sClient:             clientset,
 		CloudTerminationDelay: 30,
+		Namespace:             v1.NamespaceDefault,
 	}
 
 	kwokProvider, err := kwok.CreateCloudProvider(ctx, &cfg)
@@ -689,6 +690,7 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 	cfg := config.Config{
 		K8sClient:             clientset,
 		CloudTerminationDelay: 30,
+		Namespace:             v1.NamespaceDefault,
 	}
 
 	kwokProvider, err := kwok.CreateCloudProvider(ctx, &cfg)

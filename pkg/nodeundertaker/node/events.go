@@ -56,6 +56,7 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE,
 			Name:      n.GetName(),
 			Kind:      n.GetKind(),
 		},
+
 		Note: msg,
 		Type: eventType,
 	}

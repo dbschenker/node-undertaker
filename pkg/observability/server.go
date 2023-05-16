@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodeundertaker/config"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability/health"
-	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability/metrics"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -25,13 +24,13 @@ func GetDefaultObservabilityServer(config *config.Config) DefaultObservabilitySe
 	return o
 }
 
-func (o DefaultObservabilityServer) SetupRoutes() {
+func (o *DefaultObservabilityServer) SetupRoutes() {
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/livez", health.LivenessProbe)
 	http.HandleFunc("readyz", health.ReadinessProbe)
 }
 
-func (o DefaultObservabilityServer) StartServer(ctx context.Context) error {
+func (o *DefaultObservabilityServer) StartServer(ctx context.Context) error {
 
 	go func() {
 		select {
@@ -47,8 +46,4 @@ func (o DefaultObservabilityServer) StartServer(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func init() {
-	metrics.Initialize()
 }
