@@ -28,7 +28,7 @@ func SetupFlags(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	cmd.PersistentFlags().String(LogFormatFlag, "text", "Log format [text|json]. Default: 'test'. Can be set using LOG_FORMAT env variable")
+	cmd.PersistentFlags().String(LogFormatFlag, "text", "Log format [text|json]. Default: 'text'. Can be set using LOG_FORMAT env variable")
 	err = viper.BindPFlag(LogFormatFlag, cmd.PersistentFlags().Lookup(LogFormatFlag))
 	if err != nil {
 		return err
