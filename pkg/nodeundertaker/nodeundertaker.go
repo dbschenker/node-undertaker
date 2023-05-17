@@ -129,6 +129,7 @@ func startLogic(ctx context.Context, cfg *config.Config, handlerFuncs cache.Reso
 	}
 
 	unregisterMetrics := metrics.Initialize(nodeLister)
+	// unregister metrics so there is always only one metric - needed for testing
 	select {
 	case <-ctx.Done():
 		unregisterMetrics()
