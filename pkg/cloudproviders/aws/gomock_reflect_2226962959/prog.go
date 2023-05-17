@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -11,7 +10,7 @@ import (
 
 	"github.com/golang/mock/mockgen/model"
 
-	pkg_ "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability"
+	pkg_ "gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders/aws"
 )
 
 var output = flag.String("output", "", "The output file name, or empty to use stdout.")
@@ -19,19 +18,18 @@ var output = flag.String("output", "", "The output file name, or empty to use st
 func main() {
 	flag.Parse()
 
-	its := []struct{
+	its := []struct {
 		sym string
 		typ reflect.Type
 	}{
-		
-		{ "OBSERVABILITYSERVER", reflect.TypeOf((*pkg_.OBSERVABILITYSERVER)(nil)).Elem()},
-		
+
+		{"EC2CLIENT", reflect.TypeOf((*pkg_.EC2CLIENT)(nil)).Elem()},
 	}
 	pkg := &model.Package{
 		// NOTE: This behaves contrary to documented behaviour if the
 		// package name is not the final component of the import path.
 		// The reflect package doesn't expose the package name, though.
-		Name: path.Base("gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/observability"),
+		Name: path.Base("gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders/aws"),
 	}
 
 	for _, it := range its {
