@@ -26,31 +26,55 @@ func TestGetConfigOk(t *testing.T) {
 }
 
 func TestValidateConfigOk(t *testing.T) {
-	cfg := &Config{}
+	cfg := &Config{
+		NodeName:  "some",
+		Timeout:   10,
+		Frequency: 20,
+		LeaseTime: 30,
+	}
 	err := validateConfig(cfg)
 	assert.NoError(t, err)
 }
 
-func TestValidateConfigErrDrainDelay(t *testing.T) {
-	cfg := &Config{}
+func TestValidateConfigErrNodeName(t *testing.T) {
+	cfg := &Config{
+		Timeout:   10,
+		Frequency: 20,
+		LeaseTime: 30,
+	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)
 }
 
-func TestValidateConfigErrCloudTerminationDelay(t *testing.T) {
-	cfg := &Config{}
+func TestValidateConfigErrTimeout(t *testing.T) {
+	//TODO
+	cfg := &Config{
+		Timeout:   10,
+		Frequency: 20,
+		LeaseTime: 30,
+	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)
 }
 
-func TestValidateConfigErrNodeInitialThreshold(t *testing.T) {
-	cfg := &Config{}
+func TestValidateConfigErrFrequency(t *testing.T) {
+	//TODO
+	cfg := &Config{
+		Timeout:   10,
+		Frequency: 20,
+		LeaseTime: 30,
+	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)
 }
 
-func TestValidateConfigErrLeaseName(t *testing.T) {
-	cfg := &Config{}
+func TestValidateConfigErrLease(t *testing.T) {
+	//TODO
+	cfg := &Config{
+		Timeout:   10,
+		Frequency: 20,
+		LeaseTime: 30,
+	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)
 }
