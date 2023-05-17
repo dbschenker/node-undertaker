@@ -27,7 +27,7 @@ func TestLivenessProbe(t *testing.T) {
 func TestReadinessProbe(t *testing.T) {
 	expectedResponse := readiness{Ready: true}
 
-	req := httptest.NewRequest("GET", "http://lcoalhost:8081/readyz", nil)
+	req := httptest.NewRequest("GET", "http://localhost:8081/readyz", nil)
 	w := httptest.NewRecorder()
 	ReadinessProbe(w, req)
 

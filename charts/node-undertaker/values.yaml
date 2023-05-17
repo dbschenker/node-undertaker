@@ -1,0 +1,132 @@
+# Default values for node-undertaker.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+deployment:
+  replicaCount: 2
+
+  pdb:
+    enabled: true
+    maxUnavailable: 1
+
+  image:
+    repository: node-undertaker #TODO set final value
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
+  imagePullSecrets: []
+
+  rbac:
+    # Specified if the roles and their bindings should be created
+    create: true
+
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+  env:
+    - name: CLOUD_PROVIDER
+      value: kind
+    - name: LOG_LEVEL
+      value: debug
+    - name: LOG_FORMAT
+      value: json
+
+reporter:
+  image:
+    repository: ghcr.io/gdisdevops/docker-images/kubectl #TODO set final value
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
+  imagePullSecrets: []
+
+  rbac:
+    # Specified if the roles and their bindings should be created
+    create: true
+
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+  # fsGroup: 2000
+
+  securityContext:
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+  nodeSelector: {}
+
+  tolerations:
+    - operator: Exists
+      effect: NoSchedule
+  affinity: {}
+
+  env:
+    - name: NODE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+    - name: NAMESPACE_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.namespace
+    - name: NODE_HEALTH_ENDPOINT
+      value: https://localhost:10250/healthz
+    - name: LEASE_DURATION
+      value: "130"
+    - name: SLEEP
+      value: "20"

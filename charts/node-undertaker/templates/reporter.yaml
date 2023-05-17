@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "node-undertaker.fullname" . }}-reporter
+  labels:
+    {{- include "node-undertaker.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "node-undertaker-reporter.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.reporter.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "node-undertaker-reporter.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.reporter.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "node-undertaker-reporter.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.reporter.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-reporter
+          {{- with .Values.reporter.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.reporter.securityContext | nindent 12 }}
+          image: "{{ .Values.reporter.image.repository }}:{{ .Values.reporter.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.reporter.image.pullPolicy }}
+{{/*          ports:*/}}
+{{/*            - name: http*/}}
+{{/*              containerPort: 8080*/}}
+{{/*              protocol: TCP*/}}
+{{/*          livenessProbe:*/}}
+{{/*            httpGet:*/}}
+{{/*              path: /livez*/}}
+{{/*              port: http*/}}
+{{/*          readinessProbe:*/}}
+{{/*            httpGet:*/}}
+{{/*              path: /readyz*/}}
+{{/*              port: http*/}}
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              set -ex
+              export NODE_UID="$(kubectl get node -o custom-columns=uid:.metadata.uid --no-headers $NODE_NAME)"
+              export echo "NODE_UID=$NODE_UID"
+              while :
+              do
+                export UNHEALTHY_TEST=$(kubectl get node $NODE_NAME --no-headers -o 'custom-columns=arch:.metadata.labels.pocUnealthy')
+                #curl -f -s -o /dev/null "$NODE_HEALTH_ENDPOINT"
+                #UNHEALTHY=$?
+                export UNHEALTHY=0
+                if [[ "$UNHEALTHY" -eq 0 &&  "$UNHEALTHY_TEST" != "true" ]] ; then
+                  echo "{\"apiVersion\": \"coordination.k8s.io/v1\",\"kind\": \"Lease\",\"metadata\": {\"name\": \"$NODE_NAME\",\"namespace\": \"$NAMESPACE_NAME\", \"ownerReferences\": [{\"apiVersion\": \"v1\",\"kind\": \"Node\",\"name\": \"$NODE_NAME\",\"uid\": \"$NODE_UID\"}]}, \"spec\": {\"holderIdentity\": \"$NODE_NAME\", \"leaseDurationSeconds\": $LEASE_DURATION, \"renewTime\": \"$(date -u +"%Y-%m-%dT%H:%M:%S.000000Z")\"}}" | kubectl apply -f -
+                else
+                  echo "Node unhealthy, not updating lease"
+                fi
+                sleep $SLEEP
+              done
+          resources:
+            {{- toYaml .Values.reporter.resources | nindent 12 }}
+      {{- with .Values.reporter.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.reporter.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.reporter.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

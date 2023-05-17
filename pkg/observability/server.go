@@ -27,7 +27,7 @@ func GetDefaultObservabilityServer(config *config.Config) DefaultObservabilitySe
 func (o *DefaultObservabilityServer) SetupRoutes() {
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/livez", health.LivenessProbe)
-	http.HandleFunc("readyz", health.ReadinessProbe)
+	http.HandleFunc("/readyz", health.ReadinessProbe)
 }
 
 func (o *DefaultObservabilityServer) StartServer(ctx context.Context) error {
