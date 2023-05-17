@@ -66,14 +66,21 @@ func executeWithContext(ctx context.Context, getk8sClient func() (kubernetes.Int
 	observabilityServer := observability.GetDefaultObservabilityServer(cfg)
 	observabilityServer.SetupRoutes()
 
+	// workload
+	workload := func(ctx2 context.Context) error {
+		kubeclient.LeaderElection(
+			ctx2,
+			cfg,
+			func(ctx3 context.Context) {
+				startLogic(ctx2, cfg, nodeupdatehandler.GetDefaultUpdateHandlerFuncs(ctx, cfg), cancel)
+			},
+			cancel)
+		return nil
+	}
+
 	// start logic
-	kubeclient.LeaderElection(ctx, cfg, func(ctx1 context.Context) {
-		err = startLogic(ctx1, cfg, nodeupdatehandler.GetDefaultUpdateHandlerFuncs(ctx1, cfg), &observabilityServer)
-		if err != nil {
-			log.Errorf("couldn't start properly, due to %v", err)
-		}
-	}, cancel)
-	return nil
+	err = startServer(ctx, cfg, &observabilityServer, workload, cancel)
+	return err
 }
 
 func setupLogging() error {
@@ -97,33 +104,35 @@ func setupLogging() error {
 	return nil
 }
 
-func startLogic(ctx context.Context, cfg *config.Config, handlerFuncs cache.ResourceEventHandlerFuncs, observabilityserver observability.OBSERVABILITYSERVER) error {
+func startServer(ctx context.Context, cfg *config.Config, observabilityServer observability.OBSERVABILITYSERVER, workload func(ctx context.Context) error, cancel func()) error {
 	g, ctx := errgroup.WithContext(ctx)
+	g.Go(func() error { return observabilityServer.StartServer(ctx) })
+	g.Go(func() error { return workload(ctx) })
 
+	return g.Wait()
+}
+
+func startLogic(ctx context.Context, cfg *config.Config, handlerFuncs cache.ResourceEventHandlerFuncs, cancel func()) {
 	factory := informers.NewSharedInformerFactoryWithOptions(cfg.K8sClient, cfg.InformerResync)
 	nodeInformer := factory.Core().V1().Nodes()
 	informer := nodeInformer.Informer()
 	nodeLister := nodeInformer.Lister()
-
-	g.Go(func() error {
-		factory.Start(ctx.Done())
-		return nil
-	})
-
+	factory.Start(ctx.Done())
 	if !cache.WaitForCacheSync(ctx.Done(), informer.HasSynced) {
-		return fmt.Errorf("Timed out waiting for caches to sync")
+		log.Errorf("Timed out waiting for caches to sync")
+		cancel()
 	}
-
 	_, err := informer.AddEventHandler(handlerFuncs)
 	if err != nil {
-		return err
+		log.Errorf("Error occured while adding event handler funcs: %v", err)
+		cancel()
 	}
 
 	unregisterMetrics := metrics.Initialize(nodeLister)
-	defer unregisterMetrics()
-
-	g.Go(func() error { return observabilityserver.StartServer(ctx) })
-	return g.Wait()
+	select {
+	case <-ctx.Done():
+		unregisterMetrics()
+	}
 }
 
 func getCloudProvider(ctx context.Context, cfg *config.Config) (cloudproviders.CLOUDPROVIDER, error) {

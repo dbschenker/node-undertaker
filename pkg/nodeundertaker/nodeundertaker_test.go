@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/tools/cache"
 	"testing"
 	"time"
 )
@@ -68,32 +67,40 @@ func TestGetCloudProviderKwokOk(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestStartLogicOk(t *testing.T) {
+func TestStartServerOk(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	errorMsg := "Error happened"
 
 	observability := mock_observability.NewMockOBSERVABILITYSERVER(mockCtrl)
 	observability.EXPECT().StartServer(gomock.Any()).Times(1).DoAndReturn(
-		func(context context.Context) error {
+		func(ctx3 context.Context) error {
 			select {
-			case <-context.Done():
+			case <-ctx3.Done():
 				return fmt.Errorf(errorMsg)
 			case <-time.After(1 * time.Second):
 				return nil
 			}
 		})
 
-	ctx := context.TODO()
+	ctx, cancel := context.WithCancel(context.TODO())
+	defer cancel()
 	cfg := config.Config{}
 	cfg.K8sClient = fake.NewSimpleClientset()
-	resourceHandlerFuncs := cache.ResourceEventHandlerFuncs{}
+	workload := func(ctx2 context.Context) error {
+		select {
+		case <-ctx2.Done():
+			return fmt.Errorf(errorMsg)
+		case <-time.After(5 * time.Second):
+			return nil
+		}
+	}
 
-	res := startLogic(ctx, &cfg, resourceHandlerFuncs, observability)
+	res := startServer(ctx, &cfg, observability, workload, cancel)
 	assert.NoError(t, res)
 }
 
-func TestStartLogicNok(t *testing.T) {
+func TestStartServerNok(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -101,20 +108,28 @@ func TestStartLogicNok(t *testing.T) {
 
 	observability := mock_observability.NewMockOBSERVABILITYSERVER(mockCtrl)
 	observability.EXPECT().StartServer(gomock.Any()).Times(1).DoAndReturn(
-		func(context context.Context) error {
+		func(ctx3 context.Context) error {
 			return fmt.Errorf(errorMsg)
 		})
 
-	ctx := context.TODO()
+	ctx, cancel := context.WithCancel(context.TODO())
+	defer cancel()
 	cfg := config.Config{}
 	cfg.K8sClient = fake.NewSimpleClientset()
 
-	resourceHandlerFuncs := cache.ResourceEventHandlerFuncs{}
+	workload := func(ctx2 context.Context) error {
+		select {
+		case <-ctx2.Done():
+			return fmt.Errorf(errorMsg)
+		case <-time.After(5 * time.Second):
+			return nil
+		}
+	}
 
 	var res error
 	assert.NotPanics(t,
 		func() {
-			res = startLogic(ctx, &cfg, resourceHandlerFuncs, observability)
+			res = startServer(ctx, &cfg, observability, workload, cancel)
 		},
 	)
 	assert.EqualError(t, res, errorMsg)
@@ -132,6 +147,35 @@ func TestCancelOnSigterm(t *testing.T) {
 func TestSetupLogLevelNok(t *testing.T) {
 	err := setupLogging()
 	assert.Error(t, err)
+}
+
+func TestSetupLogFormatJsonOk(t *testing.T) {
+	originalLvl := log.GetLevel()
+	viper.Set(flags.LogLevelFlag, "error")
+	viper.Set(flags.LogFormatFlag, flags.LogFormatText)
+	err := setupLogging()
+
+	assert.NoError(t, err)
+	assert.Equal(t, log.ErrorLevel, log.GetLevel())
+	//cleanup
+	log.SetLevel(originalLvl)
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+}
+
+func TestSetupLogFormatNok(t *testing.T) {
+	originalLvl := log.GetLevel()
+	viper.Set(flags.LogLevelFlag, "error")
+	viper.Set(flags.LogFormatFlag, "unknonw")
+	err := setupLogging()
+
+	assert.Error(t, err)
+	//cleanup
+	log.SetLevel(originalLvl)
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
 }
 
 func TestSetupLogLevelOk(t *testing.T) {
