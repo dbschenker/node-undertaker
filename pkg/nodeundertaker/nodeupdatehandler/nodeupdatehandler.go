@@ -41,7 +41,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 	}
 
 	if fresh {
-		if nodeLabel != "" {
+		if nodeLabel != nodepkg.NodeHealthy {
 			n.Untaint()
 			n.RemoveActionTimestamp()
 			n.RemoveLabel()
