@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/nodereporter"
+	"github.com/spf13/viper"
+	"strings"
 
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/cmd/node-reporter/flags"
 	"github.com/spf13/cobra"
@@ -22,4 +24,23 @@ var rootCmd = &cobra.Command{
 
 		return nodereporter.Execute()
 	},
+}
+
+func main() {
+	cobra.CheckErr(rootCmd.Execute())
+}
+
+func init() {
+
+	cobra.OnInitialize(initConfig)
+	//flags
+	err := flags.SetupFlags(rootCmd)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func initConfig() {
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	viper.AutomaticEnv()
 }
