@@ -11,7 +11,7 @@ const (
 	LogLevelFlag              = "log-level"
 	LogFormatFlag             = "log-format"
 	CloudProviderFlag         = "cloud-provider"
-	InitialDelayFlag          = "initial-delay-flag"
+	InitialDelayFlag          = "initial-delay"
 	DrainDelayFlag            = "drain-delay"
 	CloudTerminationDelayFlag = "cloud-termination-delay"
 	PortFlag                  = "port"
@@ -22,6 +22,7 @@ const (
 	LeaseLockNamespaceFlag    = "lease-lock-namespace"
 	LogFormatJson             = "json"
 	LogFormatText             = "text"
+	NodeSelectorFlag          = "node-selector"
 )
 
 func SetupFlags(cmd *cobra.Command) error {
@@ -87,7 +88,11 @@ func SetupFlags(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-
+	cmd.PersistentFlags().String(NodeSelectorFlag, "", "Label selector for nodes to watch. Default: ''. Can be set using NODE_SELECTOR env variable")
+	err = viper.BindPFlag(NodeSelectorFlag, cmd.PersistentFlags().Lookup(NodeSelectorFlag))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

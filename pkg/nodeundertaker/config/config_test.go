@@ -4,6 +4,8 @@ import (
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/cmd/node-undertaker/flags"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/kubernetes/fake"
 	"os"
 	"testing"
@@ -43,6 +45,67 @@ func TestGetConfigOk(t *testing.T) {
 	assert.Equal(t, drainDelay, ret.DrainDelay)
 	assert.Equal(t, cloudTerminationDelay, ret.CloudTerminationDelay)
 	assert.Equal(t, namespace, ret.Namespace)
+	assert.Nil(t, ret.NodeSelector)
+}
+
+func TestGetConfigNodeSelectorNok(t *testing.T) {
+	namespaceSelector := "__=9999"
+	viper.Set(flags.NodeSelectorFlag, namespaceSelector)
+
+	cfg, err := GetConfig()
+	assert.Nil(t, cfg)
+	assert.Error(t, err)
+}
+
+func TestGetConfigNodeSelectorOk1(t *testing.T) {
+	namespaceSelector := "node.undertaker/powered=true"
+	viper.Set(flags.NodeSelectorFlag, namespaceSelector)
+	viper.Set(flags.LeaseLockNameFlag, "some-value")
+
+	cfg, err := GetConfig()
+	assert.NotNil(t, cfg)
+	assert.NoError(t, err)
+	assert.Len(t, cfg.NodeSelector, 1)
+	requirements, _ := cfg.NodeSelector.Requirements()
+	assert.Equal(t, selection.Operator("="), requirements[0].Operator())
+	assert.Equal(t, "node.undertaker/powered", requirements[0].Key())
+	assert.Equal(t, []string{"true"}, requirements[0].Values().List())
+
+	testLabelSets := []labels.Set{
+		labels.Set{"node.undertaker/powered": "true"},
+		labels.Set{"node.undertaker/powered": "false"},
+		labels.Set{"anyother": "false"},
+		labels.Set{},
+	}
+	testLabelSetResults := []bool{true, false, false, false}
+
+	for k := range testLabelSets {
+		assert.Equal(t, testLabelSetResults[k], cfg.NodeSelector.Matches(testLabelSets[k]))
+	}
+}
+
+func TestGetConfigNodeSelectorOk2(t *testing.T) {
+	namespaceSelector := "karpenter!=true"
+
+	viper.Set(flags.NodeSelectorFlag, namespaceSelector)
+	viper.Set(flags.LeaseLockNameFlag, "some-value")
+
+	cfg, err := GetConfig()
+	assert.NotNil(t, cfg)
+	assert.NoError(t, err)
+	assert.Len(t, cfg.NodeSelector, 1)
+
+	testLabelSets := []labels.Set{
+		labels.Set{"karpenter": "false"},
+		labels.Set{"karpenter": "true"},
+		labels.Set{"anyother": "false"},
+		labels.Set{},
+	}
+	testLabelSetResults := []bool{true, false, true, true}
+
+	for k := range testLabelSets {
+		assert.Equal(t, testLabelSetResults[k], cfg.NodeSelector.Matches(testLabelSets[k]))
+	}
 }
 
 func TestValidateConfigOk(t *testing.T) {

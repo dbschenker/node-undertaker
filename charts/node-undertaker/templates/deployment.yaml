@@ -40,6 +40,8 @@ spec:
               value: {{ .Values.deployment.settings.logLevel }}
             - name: LOG_FORMAT
               value: {{ .Values.deployment.settings.logFormat }}
+            - name: NODE_SELECTOR
+              value: {{ .Values.deployment.settings.nodeSelector }}
             - name: PORT
               value: {{ .Values.deployment.settings.port | quote }}
             {{- if .Values.deployment.settings.leaseLockName }}

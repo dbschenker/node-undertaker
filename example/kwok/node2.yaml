@@ -13,6 +13,7 @@ metadata:
     kubernetes.io/role: agent
     node-role.kubernetes.io/agent: ""
     type: kwok
+    health-manager: other
   name: kwok-node-1
 spec:
   providerID: kwok://kwok-node-1

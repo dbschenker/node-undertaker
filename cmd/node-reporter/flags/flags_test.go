@@ -15,6 +15,8 @@ func TestSetupFlags(t *testing.T) {
 
 func TestValdiateRootFlagsOk(t *testing.T) {
 	viper.Set(LogLevelFlag, "info")
+	viper.Set(LogFormatFlag, "json")
+	viper.Set(NodeNameFlag, "test-node")
 	res := ValidateRootFlags()
 
 	assert.NoError(t, res)

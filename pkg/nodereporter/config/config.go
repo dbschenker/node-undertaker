@@ -30,8 +30,8 @@ func GetConfig() (*Config, error) {
 	if err != nil {
 		return &ret, err
 	}
-	ret.LeaseTime = viper.GetInt(flags.TimeoutFlag)
-	ret.LeaseTime = viper.GetInt(flags.FrequencyFlag)
+	ret.Timeout = viper.GetInt(flags.TimeoutFlag)
+	ret.Frequency = viper.GetInt(flags.FrequencyFlag)
 	ret.LeaseTime = viper.GetInt(flags.LeaseTimeFlag)
 
 	ret.URL = url

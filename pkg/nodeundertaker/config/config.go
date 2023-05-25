@@ -6,6 +6,7 @@ import (
 	"gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/pkg/cloudproviders"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"os"
 	"time"
@@ -26,6 +27,7 @@ type Config struct {
 	NodeLeaseNamespace    string
 	InitialDelay          int
 	StartupTime           time.Time
+	NodeSelector          labels.Selector
 }
 
 func GetConfig() (*Config, error) {
@@ -47,6 +49,12 @@ func GetConfig() (*Config, error) {
 		return nil, err
 	}
 	ret.Hostname = hostname
+
+	selectors, err := labels.Parse(viper.GetString(flags.NodeSelectorFlag))
+	if err != nil {
+		return nil, err
+	}
+	ret.NodeSelector = selectors
 
 	return &ret, validateConfig(&ret)
 }

@@ -16,6 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
@@ -113,7 +114,12 @@ func startServer(ctx context.Context, cfg *config.Config, observabilityServer ob
 }
 
 func startLogic(ctx context.Context, cfg *config.Config, handlerFuncs cache.ResourceEventHandlerFuncs, cancel func()) {
-	factory := informers.NewSharedInformerFactoryWithOptions(cfg.K8sClient, cfg.InformerResync)
+	tweakListOptionsFunc := func(opts *v1.ListOptions) {
+		opts.LabelSelector = cfg.NodeSelector.String()
+	}
+	options := informers.WithTweakListOptions(tweakListOptionsFunc)
+
+	factory := informers.NewSharedInformerFactoryWithOptions(cfg.K8sClient, cfg.InformerResync, options)
 	nodeInformer := factory.Core().V1().Nodes()
 	informer := nodeInformer.Informer()
 	nodeLister := nodeInformer.Lister()

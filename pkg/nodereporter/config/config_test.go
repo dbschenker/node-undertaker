@@ -15,14 +15,19 @@ func TestGetConfigNegativeValidation(t *testing.T) {
 
 func TestGetConfigOk(t *testing.T) {
 	namespace := "ns1"
+	nodeName := "test-node1"
 
 	viper.Set(flags.NamespaceFlag, namespace)
+	viper.Set(flags.NodeNameFlag, nodeName)
+	viper.Set(flags.FrequencyFlag, 90)
+	viper.Set(flags.TimeoutFlag, 30)
 
 	ret, err := GetConfig()
 
 	assert.NoError(t, err)
 	assert.NotNil(t, ret)
 	assert.Equal(t, namespace, ret.Namespace)
+	assert.Equal(t, nodeName, ret.NodeName)
 }
 
 func TestValidateConfigOk(t *testing.T) {
