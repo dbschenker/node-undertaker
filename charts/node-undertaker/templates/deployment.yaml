@@ -27,17 +27,43 @@ spec:
         {{- toYaml .Values.deployment.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
-          {{- with .Values.reporter.env }}
           env:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            - name: CLOUD_PROVIDER
+              value: {{ .Values.deployment.settings.cloudProvider }}
+            - name: NODE_INITIAL_THRESHOLD
+              value: {{ .Values.deployment.settings.nodeInitialThreshold | quote }}
+            - name: CLOUD_TERMINATION_DELAY
+              value: {{ .Values.deployment.settings.cloudTerminationDelay | quote }}
+            - name: DRAIN_DELAY
+              value: {{ .Values.deployment.settings.drainDelay | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.deployment.settings.logLevel }}
+            - name: LOG_FORMAT
+              value: {{ .Values.deployment.settings.logFormat }}
+            - name: PORT
+              value: {{ .Values.deployment.settings.port | quote }}
+            {{- if .Values.deployment.settings.leaseLockName }}
+            - name: LEASE_LOCK_NAME
+              value: {{ .Values.deployment.settings.leaseLockName | quote }}
+            {{- end }}
+            {{- if .Values.deployment.settings.leaseLockNamespace }}
+            - name: LEASE_LOCK_NAMESPACE
+              value: {{ .Values.deployment.settings.leaseLockNamespace | quote }}
+            {{- end }}
+            {{- if .Values.deployment.settings.namespace }}
+            - name: NAMESPACE
+              value: {{ .Values.deployment.settings.namespace | quote }}
+            {{- end }}
+            {{- if .Values.deployment.env }}
+            {{- toYaml .Values.deployment.env | nindent 12 }}
+            {{- end }}
           securityContext:
             {{- toYaml .Values.deployment.securityContext | nindent 12 }}
           image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: {{ .Values.deployment.settings.port }}
               protocol: TCP
           livenessProbe:
             httpGet:

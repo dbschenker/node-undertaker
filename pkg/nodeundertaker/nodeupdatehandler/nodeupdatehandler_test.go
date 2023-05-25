@@ -66,6 +66,15 @@ func TestUnknownLabel(t *testing.T) {
 	assert.Len(t, events.Items, 1)
 }
 
+func TestNodeUpdateInternalNotAfterInitialDelay(t *testing.T) {
+	cfg := config.Config{
+		StartupTime:  time.Now().Add(-50 * time.Second),
+		InitialDelay: 100,
+	}
+	n := nodepkg.Node{}
+	nodeUpdateInternal(context.TODO(), &cfg, &n)
+}
+
 // node not grown up - should do nothing
 func TestNodeUpdateInternalNotGrownUp(t *testing.T) {
 	nodeName := "test-node1"
@@ -409,4 +418,22 @@ func TestGetDefaultUpdateHandlerFuncs(t *testing.T) {
 	assert.Nil(t, result.DeleteFunc)
 	assert.NotNil(t, result.AddFunc)
 	assert.NotNil(t, result.UpdateFunc)
+}
+
+func TestIsAfterInitialDelayOk(t *testing.T) {
+	cfg := config.Config{
+		StartupTime:  time.Now().Add(-50 * time.Second),
+		InitialDelay: 20,
+	}
+	ret := isAfterInitialDelay(&cfg)
+	assert.True(t, ret)
+}
+
+func TestIsAfterInitialDelayNok(t *testing.T) {
+	cfg := config.Config{
+		StartupTime:  time.Now().Add(-50 * time.Second),
+		InitialDelay: 100,
+	}
+	ret := isAfterInitialDelay(&cfg)
+	assert.False(t, ret)
 }

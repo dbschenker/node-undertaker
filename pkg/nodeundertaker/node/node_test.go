@@ -382,8 +382,8 @@ func TestFindLeaseOk(t *testing.T) {
 		},
 	}
 	cfg := config.Config{
-		K8sClient: fake.NewSimpleClientset(),
-		Namespace: namespace,
+		K8sClient:          fake.NewSimpleClientset(),
+		NodeLeaseNamespace: namespace,
 	}
 	_, err := cfg.K8sClient.CoordinationV1().Leases(namespace).Create(context.TODO(), &lease, metav1.CreateOptions{})
 	require.NoError(t, err)
@@ -433,8 +433,8 @@ func TestHasFreshLeaseOk(t *testing.T) {
 		},
 	}
 	cfg := config.Config{
-		K8sClient: fake.NewSimpleClientset(),
-		Namespace: namespace,
+		K8sClient:          fake.NewSimpleClientset(),
+		NodeLeaseNamespace: namespace,
 	}
 	_, err := cfg.K8sClient.CoordinationV1().Leases(namespace).Create(context.TODO(), &lease, metav1.CreateOptions{})
 	require.NoError(t, err)

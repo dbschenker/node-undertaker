@@ -101,6 +101,18 @@ func TestValidateConfigErrLeaseName(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestValidateConfigErrInitialDelay(t *testing.T) {
+	cfg := &Config{
+		DrainDelay:            1,
+		CloudTerminationDelay: 1,
+		Port:                  8080,
+		LeaseLockName:         "test",
+		InitialDelay:          -1,
+	}
+	err := validateConfig(cfg)
+	assert.Error(t, err)
+}
+
 func TestSetK8sClient(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	currentNamespace := "test"
@@ -108,6 +120,7 @@ func TestSetK8sClient(t *testing.T) {
 	cfg.SetK8sClient(client, currentNamespace)
 	assert.Equal(t, currentNamespace, cfg.Namespace)
 	assert.Equal(t, currentNamespace, cfg.LeaseLockNamespace)
+	assert.Equal(t, currentNamespace, cfg.NodeLeaseNamespace)
 	assert.Equal(t, client, cfg.K8sClient)
 }
 
@@ -115,14 +128,17 @@ func TestSetK8sClient1(t *testing.T) {
 	client := fake.NewSimpleClientset()
 	currentNamespace := "test"
 	leaseLockNs := "lease-lock-ns"
+	nodeLeaseNs := "node-leases"
 	appNamespace := "app-ns"
 	cfg := Config{
 		LeaseLockNamespace: leaseLockNs,
 		Namespace:          appNamespace,
+		NodeLeaseNamespace: nodeLeaseNs,
 	}
 
 	cfg.SetK8sClient(client, currentNamespace)
 	assert.Equal(t, appNamespace, cfg.Namespace)
 	assert.Equal(t, leaseLockNs, cfg.LeaseLockNamespace)
+	assert.Equal(t, nodeLeaseNs, cfg.NodeLeaseNamespace)
 	assert.Equal(t, client, cfg.K8sClient)
 }

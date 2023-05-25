@@ -23,6 +23,9 @@ type Config struct {
 	Hostname              string
 	LeaseLockName         string
 	LeaseLockNamespace    string
+	NodeLeaseNamespace    string
+	InitialDelay          int
+	StartupTime           time.Time
 }
 
 func GetConfig() (*Config, error) {
@@ -35,6 +38,9 @@ func GetConfig() (*Config, error) {
 	ret.LeaseLockNamespace = viper.GetString(flags.LeaseLockNamespaceFlag)
 	ret.LeaseLockName = viper.GetString(flags.LeaseLockNameFlag)
 	ret.NodeInitialThreshold = viper.GetInt(flags.NodeInitialThresholdFlag)
+	ret.NodeLeaseNamespace = viper.GetString(flags.NodeLeaseNamespaceFlag)
+	ret.InitialDelay = viper.GetInt(flags.InitialDelayFlag)
+	ret.StartupTime = time.Now()
 
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -55,6 +61,10 @@ func (cfg *Config) SetK8sClient(k8sClient kubernetes.Interface, namespace string
 		log.Infof("Using autodetected namespace for lease lock: %s", namespace)
 		cfg.LeaseLockNamespace = namespace
 	}
+	if cfg.NodeLeaseNamespace == "" {
+		log.Infof("Using autodetected namespace for node leases: %s", namespace)
+		cfg.NodeLeaseNamespace = namespace
+	}
 }
 
 func validateConfig(cfg *Config) error {
@@ -74,6 +84,9 @@ func validateConfig(cfg *Config) error {
 
 	if cfg.Port < 0 {
 		return fmt.Errorf("%s can't be lower than zero", flags.PortFlag)
+	}
+	if cfg.InitialDelay < 0 {
+		return fmt.Errorf("%s can't be lower than zero", flags.InitialDelayFlag)
 	}
 
 	return nil

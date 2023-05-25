@@ -17,6 +17,10 @@ func OnNodeUpdate(ctx context.Context, cfg *config.Config, nv1 *v1.Node) {
 }
 
 func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE) {
+	if !isAfterInitialDelay(cfg) {
+		log.Debugf("Node udertaker is not running at least %d seconds", cfg.InitialDelay)
+		return
+	}
 	if !n.IsGrownUp(cfg) {
 		log.Debugf("%s/%s: is not old enough (%d seconds) - might be not fully initialized.", n.GetKind(), n.GetName(), cfg.NodeInitialThreshold)
 		return
@@ -138,4 +142,8 @@ func GetDefaultUpdateHandlerFuncs(ctx context.Context, cfg *config.Config) cache
 		},
 		DeleteFunc: nil,
 	}
+}
+
+func isAfterInitialDelay(cfg *config.Config) bool {
+	return cfg.StartupTime.Add(time.Duration(cfg.InitialDelay) * time.Second).Before(time.Now())
 }

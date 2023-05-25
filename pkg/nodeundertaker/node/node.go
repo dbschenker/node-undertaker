@@ -213,7 +213,7 @@ func (n *Node) Save(ctx context.Context, cfg *config.Config) error {
 }
 
 func (n *Node) findLease(ctx context.Context, cfg *config.Config) (*coordinationv1.Lease, error) {
-	return cfg.K8sClient.CoordinationV1().Leases(cfg.Namespace).Get(ctx, n.ObjectMeta.Name, metav1.GetOptions{ResourceVersion: "0"})
+	return cfg.K8sClient.CoordinationV1().Leases(cfg.NodeLeaseNamespace).Get(ctx, n.ObjectMeta.Name, metav1.GetOptions{ResourceVersion: "0"})
 }
 
 func (n *Node) GetName() string {
