@@ -60,39 +60,3 @@ Create the name of the service account to use
 {{- default "default" .Values.deployment.serviceAccount.name }}
 {{- end }}
 {{- end }}
-
-
-
-{{/*##### reporter */}}
-
-{{/*
-Common labels
-*/}}
-{{- define "node-undertaker-reporter.labels" -}}
-helm.sh/chart: {{ include "node-undertaker.chart" . }}
-{{ include "node-undertaker-reporter.selectorLabels" . }}
-{{- if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-{{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
-
-{{/*
-Selector labels
-*/}}
-{{- define "node-undertaker-reporter.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "node-undertaker.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
-{{- end }}
-
-
-{{/*
-Create the name of the service account to use
-*/}}
-{{- define "node-undertaker-reporter.serviceAccountName" -}}
-{{- if .Values.reporter.serviceAccount.create }}
-{{- default (include "node-undertaker.fullname" .) .Values.reporter.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.reporter.serviceAccount.name }}
-{{- end }}
-{{- end }}

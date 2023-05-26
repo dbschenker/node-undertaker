@@ -36,7 +36,6 @@ spec:
               value: "130"
             - name: SLEEP
               value: "20"
-#          image: ghcr.io/gdisdevops/docker-images/kubectl:v1.24.9
           image: bitnami/kubectl:1.26
           command:
           - /bin/sh

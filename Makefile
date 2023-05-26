@@ -4,7 +4,6 @@ build: build-node-undertaker
 
 build-node-undertaker:
 	go build -o bin/node-undertaker gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/cmd/node-undertaker
-	go build -o bin/node-undertaker gilds-git.signintra.com/aws-dctf/kubernetes/node-undertaker/cmd/node-reporter
 
 test: mock
 	go test ./...
