@@ -79,6 +79,7 @@ deployment:
   env: []
 
 reporter:
+  enabled: true
   image:
     repository: ghcr.io/gdisdevops/docker-images/kubectl #TODO set final value
     pullPolicy: IfNotPresent

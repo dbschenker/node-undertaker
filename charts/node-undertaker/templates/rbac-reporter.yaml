@@ -1,3 +1,4 @@
+{{- if .Values.reporter.enabled }}
 {{- if .Values.reporter.rbac.create }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -52,4 +53,5 @@ rules:
       - get
       - create
       - patch
+{{- end }}
 {{- end }}
