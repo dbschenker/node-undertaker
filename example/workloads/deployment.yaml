@@ -20,6 +20,8 @@ spec:
       labels:
         app: test
     spec:
+      nodeSelector:
+        "node-role:kubernetes:io/worker": ""
       containers:
         - image: nginx
           name: nginx

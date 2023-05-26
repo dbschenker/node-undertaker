@@ -52,33 +52,33 @@ func TestValidateConfigErrNodeName(t *testing.T) {
 }
 
 func TestValidateConfigErrTimeout(t *testing.T) {
-	//TODO
 	cfg := &Config{
-		Timeout:   10,
+		Timeout:   -1,
 		Frequency: 20,
 		LeaseTime: 30,
+		NodeName:  "asdads",
 	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)
 }
 
 func TestValidateConfigErrFrequency(t *testing.T) {
-	//TODO
 	cfg := &Config{
 		Timeout:   10,
-		Frequency: 20,
+		Frequency: -1,
 		LeaseTime: 30,
+		NodeName:  "asdasd",
 	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)
 }
 
 func TestValidateConfigErrLease(t *testing.T) {
-	//TODO
 	cfg := &Config{
 		Timeout:   10,
 		Frequency: 20,
-		LeaseTime: 30,
+		LeaseTime: -1,
+		NodeName:  "asdasd",
 	}
 	err := validateConfig(cfg)
 	assert.Error(t, err)
