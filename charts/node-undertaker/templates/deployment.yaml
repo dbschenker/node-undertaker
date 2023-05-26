@@ -5,67 +5,67 @@ metadata:
   labels:
     {{- include "node-undertaker.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.deployment.replicaCount }}
+  replicas: {{ .Values.controller.replicaCount }}
   selector:
     matchLabels:
       {{- include "node-undertaker.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.deployment.podAnnotations }}
+      {{- with .Values.controller.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
         {{- include "node-undertaker.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.deployment.imagePullSecrets }}
+      {{- with .Values.controller.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "node-undertaker.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.deployment.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.controller.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
           env:
             - name: CLOUD_PROVIDER
-              value: {{ .Values.deployment.settings.cloudProvider }}
+              value: {{ .Values.controller.settings.cloudProvider }}
             - name: NODE_INITIAL_THRESHOLD
-              value: {{ .Values.deployment.settings.nodeInitialThreshold | quote }}
+              value: {{ .Values.controller.settings.nodeInitialThreshold | quote }}
             - name: CLOUD_TERMINATION_DELAY
-              value: {{ .Values.deployment.settings.cloudTerminationDelay | quote }}
+              value: {{ .Values.controller.settings.cloudTerminationDelay | quote }}
             - name: DRAIN_DELAY
-              value: {{ .Values.deployment.settings.drainDelay | quote }}
+              value: {{ .Values.controller.settings.drainDelay | quote }}
             - name: LOG_LEVEL
-              value: {{ .Values.deployment.settings.logLevel }}
+              value: {{ .Values.controller.settings.logLevel }}
             - name: LOG_FORMAT
-              value: {{ .Values.deployment.settings.logFormat }}
+              value: {{ .Values.controller.settings.logFormat }}
             - name: NODE_SELECTOR
-              value: {{ .Values.deployment.settings.nodeSelector }}
+              value: {{ .Values.controller.settings.nodeSelector }}
             - name: PORT
-              value: {{ .Values.deployment.settings.port | quote }}
-            {{- if .Values.deployment.settings.leaseLockName }}
+              value: {{ .Values.controller.settings.port | quote }}
+            {{- if .Values.controller.settings.leaseLockName }}
             - name: LEASE_LOCK_NAME
-              value: {{ .Values.deployment.settings.leaseLockName | quote }}
+              value: {{ .Values.controller.settings.leaseLockName | quote }}
             {{- end }}
-            {{- if .Values.deployment.settings.leaseLockNamespace }}
+            {{- if .Values.controller.settings.leaseLockNamespace }}
             - name: LEASE_LOCK_NAMESPACE
-              value: {{ .Values.deployment.settings.leaseLockNamespace | quote }}
+              value: {{ .Values.controller.settings.leaseLockNamespace | quote }}
             {{- end }}
-            {{- if .Values.deployment.settings.namespace }}
+            {{- if .Values.controller.settings.namespace }}
             - name: NAMESPACE
-              value: {{ .Values.deployment.settings.namespace | quote }}
+              value: {{ .Values.controller.settings.namespace | quote }}
             {{- end }}
-            {{- if .Values.deployment.env }}
-            {{- toYaml .Values.deployment.env | nindent 12 }}
+            {{- if .Values.controller.env }}
+            {{- toYaml .Values.controller.env | nindent 12 }}
             {{- end }}
           securityContext:
-            {{- toYaml .Values.deployment.securityContext | nindent 12 }}
-          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+            {{- toYaml .Values.controller.securityContext | nindent 12 }}
+          image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.deployment.settings.port }}
+              containerPort: {{ .Values.controller.settings.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -78,16 +78,16 @@ spec:
               port: http
             initialDelaySeconds: 10
           resources:
-            {{- toYaml .Values.deployment.resources | nindent 12 }}
-      {{- with .Values.deployment.nodeSelector }}
+            {{- toYaml .Values.controller.resources | nindent 12 }}
+      {{- with .Values.controller.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.deployment.affinity }}
+      {{- with .Values.controller.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.deployment.tolerations }}
+      {{- with .Values.controller.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

@@ -54,9 +54,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "node-undertaker.serviceAccountName" -}}
-{{- if .Values.deployment.serviceAccount.create }}
-{{- default (include "node-undertaker.fullname" .) .Values.deployment.serviceAccount.name }}
+{{- if .Values.controller.serviceAccount.create }}
+{{- default (include "node-undertaker.fullname" .) .Values.controller.serviceAccount.name }}
 {{- else }}
-{{- default "default" .Values.deployment.serviceAccount.name }}
+{{- default "default" .Values.controller.serviceAccount.name }}
 {{- end }}
 {{- end }}

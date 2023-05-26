@@ -5,19 +5,19 @@
 nameOverride: ""
 fullnameOverride: ""
 
-deployment:
+controller:
   settings:
     cloudProvider: aws
     logLevel: info
     logFormat: json
-    leaseLockName: null
-    leaseLockNamespace: null
-    namespace: null
+#    leaseLockName: null
+#    leaseLockNamespace: null
+#    namespace: null
     nodeInitialThreshold: 120
     drainDelay: 300
     cloudTerminationDelay: 300
     port: 8080
-    nodeLeaseNamespace: null
+#    nodeLeaseNamespace: "kube-node-lease"
     nodeSelector: ""
   replicaCount: 2
 
