@@ -67,7 +67,7 @@ func SetupFlags(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	cmd.PersistentFlags().String(NodeLeaseNamespaceFlag, "", "Namespace containing leases. Default: '' - which is the same namespace node-undertaker runs. Can be set using NODE_LEASE_NAMESPACE env variable")
+	cmd.PersistentFlags().String(NodeLeaseNamespaceFlag, "kube-node-lease", "Namespace containing leases. Default: '' - which is the same namespace node-undertaker runs. Can be set using NODE_LEASE_NAMESPACE env variable")
 	err = viper.BindPFlag(NodeLeaseNamespaceFlag, cmd.PersistentFlags().Lookup(NodeLeaseNamespaceFlag))
 	if err != nil {
 		return err
