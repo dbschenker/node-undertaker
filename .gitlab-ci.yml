@@ -29,3 +29,7 @@ Dependency-Track:
   - export PATH=$GOPATH/bin:$PATH
   - go get github.com/golang/mock/mockgen
   - go install github.com/golang/mock/mockgen
+
+Docker Release:
+  variables:
+    PROJECT_VERSION: "${CI_COMMIT_REF_NAME}"
