@@ -7,15 +7,6 @@ include:
   - project: shared-scripts/gitlab-ci
     file: /autodevops-golang-1.19.yml
     ref: golang-pipeline
-  - project: shared-scripts/gitlab-ci
-    file: build-and-publish-docs.yml
-    ref: master
-
-build-and-publish-docs:
-  extends: .build_and_publish_docs
-  stage: build
-  rules:
-    - if: $CI_SERVER_HOST == "gilds-git.signintra.com" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 # mockgen setup
 Test:
