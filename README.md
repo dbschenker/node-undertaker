@@ -37,8 +37,8 @@ For AWS node-undertaker requires to have granted IAM role with following policy:
             "ec2:TerminateInstances",
             "autoscaling:DescribeAutoScalingInstances",
             "autoscaling:DescribeTrafficSources",
-            "elb:DeregisterInstancesFromLoadBalancer",
-            "elbv2:DeregisterTargets"
+            "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+            "elasticloadbalancing:DeregisterTargets"
          ],
          "Resource": "*"
       }
