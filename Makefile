@@ -46,4 +46,4 @@ kwok:
 	kubectl config use-context kwok-kwok
 
 local_chart:
-	helm package charts/node-undertaker -d ../../gilds-node-undertaker/chart/gilds-node-undertaker/charts/
+	helm package charts/node-undertaker -d ../../gilds-node-undertaker/chart/node-undertaker/charts/
