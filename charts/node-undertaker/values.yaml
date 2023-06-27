@@ -19,6 +19,8 @@ controller:
     port: 8080
 #    nodeLeaseNamespace: "kube-node-lease"
     nodeSelector: ""
+    aws:
+      region: ""
   replicaCount: 2
 
   pdb:

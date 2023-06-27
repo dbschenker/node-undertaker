@@ -48,6 +48,10 @@ spec:
             - name: LEASE_LOCK_NAME
               value: {{ .Values.controller.settings.leaseLockName | quote }}
             {{- end }}
+            {{- if .Values.controller.settings.aws.region }}
+            - name: AWS_REGION
+              value: {{ .Values.controller.settings.aws.region | quote }}
+            {{- end }}
             {{- if .Values.controller.settings.leaseLockNamespace }}
             - name: LEASE_LOCK_NAMESPACE
               value: {{ .Values.controller.settings.leaseLockNamespace | quote }}
