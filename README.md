@@ -15,7 +15,7 @@ Currently supported cloud providers:
 This tool checks every minute all the nodes if they have "fresh" lease in a namespace.
 It can check leases in the kube-node-lease namespace (created by kubelet) or any other namespace that contains similar leases (for custom healthchecking solution).
 
-[//]: # (//TODO state diagram)
+![Diagram](docs/states.png)
 
 
 ## Getting started
@@ -53,15 +53,7 @@ In case there are more resources than one cluster it is advised to limit access 
    "Version": "2012-10-17",
    "Statement": [
       {
-         "Effect": "Allow",
-         "Action": [
-            "ec2:TerminateInstances",
-            "autoscaling:DescribeAutoScalingInstances",
-            "autoscaling:DescribeTrafficSources",
-            "elb:DeregisterInstancesFromLoadBalancer",
-            "elbv2:DeregisterTargets"
-         ],
-         "Resource": "*",
+         ...
          "Condition": {
             "StringLike": {
                "ec2:ResourceTag/kubernetes.io/cluster/CLUSTER_NAME": "owned"
