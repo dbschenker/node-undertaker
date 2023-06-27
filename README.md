@@ -78,4 +78,30 @@ In case there are more resources than one cluster it is advised to limit access 
 
 ## Development
 
-[//]: # (TODO write something here)
+### Requirements
+
+1. golang
+2. docker (for running tests)
+3. (optional) kwok & kind - useful for manual testing
+4. (optional) make - for convenient building
+
+### Testing
+
+#### With kwok
+1. Create cluster & switch to its context: `make kwok`
+2. Run node-undertaker locally: `make local` or run command with customized configuration
+3. Create node with required configuration - examples in `example/kwok/node*.yaml`
+4. (Optional) manually update node's lease with `example/kwok/create-node-lease.sh NODE_NAME kube-node-lease 100`
+      * NODE_NAME - is node name which lease has to be updated
+      * kube-node-lease - is the namespace that holds the leases
+      * 100 - is the lease duration to set
+
+Cleanup: `kwokctl delete cluster`
+
+#### With kind
+1. create cluster: `make kind`
+2. build local image: `make docker`
+3. load image to kind: `make kind_load`
+4. Install with helm: `make kind_helm`
+
+Cleanup: `kind delete cluster`

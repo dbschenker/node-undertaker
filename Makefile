@@ -32,8 +32,14 @@ vet:
 kind:
 	kind create cluster --config example/kind/config.yaml
 
+kind_load:
+	kind load docker-image node-undertaker:local
+
+kind_helm:
+	helm upgrade --install -n node-undertaker node-undertaker charts/node-undertaker --create-namespace -f example/kind/values.yaml
+
 local:
-	bin/node-undertaker --namespace node-undertaker --log-level=debug --cloud-provider=kwok --cloud-termination-delay=45 --drain-delay=90 --node-initial-threshold 45
+	bin/node-undertaker --namespace kube-node-lease --log-level=debug --cloud-provider=kwok --cloud-termination-delay=45 --drain-delay=90 --node-initial-threshold 45
 
 kwok:
 	kwok create cluster
