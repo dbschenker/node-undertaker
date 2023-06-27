@@ -41,7 +41,7 @@ spec:
             - name: LOG_FORMAT
               value: {{ .Values.controller.settings.logFormat }}
             - name: NODE_SELECTOR
-              value: {{ .Values.controller.settings.nodeSelector }}
+              value: {{ .Values.controller.settings.nodeSelector | quote }}
             - name: PORT
               value: {{ .Values.controller.settings.port | quote }}
             {{- if .Values.controller.settings.leaseLockName }}
