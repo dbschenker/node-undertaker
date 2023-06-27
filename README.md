@@ -22,14 +22,53 @@ It can check leases in the kube-node-lease namespace (created by kubelet) or any
 
 ### Cloud provider setup
 
-Before you can start node-undertaker it needs access granted to cloud provider.
+Before you can start node-undertaker it needs credentials with access granted to cloud provider.
 
 #### AWS
 For AWS node-undertaker requires to have granted IAM role with following policy:
 
 ```json
 {
-//  TODO: put role here
+   "Version": "2012-10-17",
+   "Statement": [
+      {
+         "Effect": "Allow",
+         "Action": [
+            "ec2:TerminateInstances",
+            "autoscaling:DescribeAutoScalingInstances",
+            "autoscaling:DescribeTrafficSources",
+            "elb:DeregisterInstancesFromLoadBalancer",
+            "elbv2:DeregisterTargets"
+         ],
+         "Resource": "*"
+      }
+   ]
+}
+```
+
+In case there are more resources than one cluster it is advised to limit access to only one cluster's resources (for example by using Conditions). Example policy for cluster named CLUSTER_NAME: 
+
+```json
+{
+   "Version": "2012-10-17",
+   "Statement": [
+      {
+         "Effect": "Allow",
+         "Action": [
+            "ec2:TerminateInstances",
+            "autoscaling:DescribeAutoScalingInstances",
+            "autoscaling:DescribeTrafficSources",
+            "elb:DeregisterInstancesFromLoadBalancer",
+            "elbv2:DeregisterTargets"
+         ],
+         "Resource": "*",
+         "Condition": {
+            "StringLike": {
+               "ec2:ResourceTag/kubernetes.io/cluster/CLUSTER_NAME": "owned"
+            }
+         }
+      }
+   ]
 }
 ```
 
