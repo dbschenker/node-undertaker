@@ -62,7 +62,7 @@ In case there are more resources than one cluster it is advised to limit access 
          "Resource": "*",
          "Condition": {
             "StringLike": {
-               "ec2:ResourceTag/kubernetes.io/cluster/CLUSTER_NAME": "owned"
+               "aws:ResourceTag/kubernetes.io/cluster/CLUSTER_NAME": "owned"
             }
          }
       },
