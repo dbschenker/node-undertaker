@@ -70,7 +70,7 @@ In case there are more resources than one cluster it is advised to limit access 
          "Effect": "Allow",
          "Action": [
             "autoscaling:DescribeAutoScalingInstances",
-            "autoscaling:DescribeTrafficSources",
+            "autoscaling:DescribeTrafficSources"
          ],
          "Resource": "*"
       }
