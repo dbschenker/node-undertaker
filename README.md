@@ -46,7 +46,7 @@ For AWS node-undertaker requires to have granted IAM role with following policy:
 }
 ```
 
-In case there are more resources than one cluster it is advised to limit access to only one cluster's resources (for example by using Conditions). Example policy for cluster named CLUSTER_NAME: 
+In case there are more resources than one cluster it is advised to limit access to only one cluster's resources (for example by using Conditions). Example policy for clusters tagged with 'kubernetes.io/cluster/CLUSTER_NAME=owned': 
 
 ```json
 {
