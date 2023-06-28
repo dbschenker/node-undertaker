@@ -53,12 +53,26 @@ In case there are more resources than one cluster it is advised to limit access 
    "Version": "2012-10-17",
    "Statement": [
       {
-         ...
+         "Effect": "Allow",
+         "Action": [
+            "ec2:TerminateInstances",
+            "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+            "elasticloadbalancing:DeregisterTargets"
+         ],
+         "Resource": "*",
          "Condition": {
             "StringLike": {
                "ec2:ResourceTag/kubernetes.io/cluster/CLUSTER_NAME": "owned"
             }
          }
+      },
+      {
+         "Effect": "Allow",
+         "Action": [
+            "autoscaling:DescribeAutoScalingInstances",
+            "autoscaling:DescribeTrafficSources",
+         ],
+         "Resource": "*"
       }
    ]
 }
