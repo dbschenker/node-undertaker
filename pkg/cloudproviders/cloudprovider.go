@@ -9,4 +9,6 @@ type CLOUDPROVIDER interface {
 
 	// TerminateNode terminates node with provided providerId. Returns message (for creation of events) and error
 	TerminateNode(context.Context, string) (string, error)
+	// PrepareTermination prepares node to be termianted (i.e. removes it from load balancers)
+	PrepareTermination(context.Context, string) (string, error)
 }

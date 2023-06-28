@@ -22,9 +22,10 @@ type AwsCloudProvider struct {
 }
 
 const (
-	TerminationEventActionFailed      = "Instance Termination Failed"
-	TerminationEventActionLbsDetached = "Instance Detached From LBs"
-	TerminationEventActionSucceeded   = "Instance Terminated"
+	TerminationEventActionFailed           = "Instance Termination Failed"
+	TerminationEventActionSucceeded        = "Instance Terminated"
+	PrepareTerminationEventActionFailed    = "Instance Preparation For Termination Failed"
+	PrepareTerminationEventActionSucceeded = "Instance Prepared For Termination "
 )
 
 func CreateCloudProvider(ctx context.Context) (AwsCloudProvider, error) {
@@ -46,29 +47,36 @@ func (p AwsCloudProvider) TerminateNode(ctx context.Context, cloudProviderNodeId
 	if err != nil {
 		return TerminationEventActionFailed, err
 	}
-	asgName, err := p.getAsgForInstance(ctx, string(instanceId))
-	if err != nil {
-		return TerminationEventActionFailed, err
-	}
-	if asgName != nil {
-		ts, err := p.getTrafficSourcesForAsg(ctx, asgName)
-		if err != nil {
-			return TerminationEventActionFailed, err
-		}
-		if len(ts) > 0 {
-			err := p.detachInstanceFromTrafficSources(ctx, ts, string(instanceId))
-			if err != nil {
-				return TerminationEventActionFailed, err
-			}
-			return TerminationEventActionLbsDetached, nil
-		}
-	}
-
 	err = p.terminateInstance(ctx, string(instanceId))
 	if err != nil {
 		return TerminationEventActionFailed, err
 	}
 	return TerminationEventActionSucceeded, nil
+}
+
+func (p AwsCloudProvider) PrepareTermination(ctx context.Context, cloudProviderNodeId string) (string, error) {
+	instanceId, err := awscloudproviderv1.KubernetesInstanceID(cloudProviderNodeId).MapToAWSInstanceID()
+	if err != nil {
+		return PrepareTerminationEventActionFailed, err
+	}
+	asgName, err := p.getAsgForInstance(ctx, string(instanceId))
+	if err != nil {
+		return PrepareTerminationEventActionFailed, err
+	}
+	if asgName != nil {
+		ts, err := p.getTrafficSourcesForAsg(ctx, asgName)
+		if err != nil {
+			return PrepareTerminationEventActionFailed, err
+		}
+		if len(ts) > 0 {
+			err := p.detachInstanceFromTrafficSources(ctx, ts, string(instanceId))
+			if err != nil {
+				return PrepareTerminationEventActionFailed, err
+			}
+
+		}
+	}
+	return PrepareTerminationEventActionSucceeded, nil
 }
 
 func (p AwsCloudProvider) terminateInstance(ctx context.Context, instanceId string) error {

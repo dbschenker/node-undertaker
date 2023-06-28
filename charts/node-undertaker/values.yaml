@@ -15,7 +15,8 @@ controller:
 #    namespace: null
     nodeInitialThreshold: 120
     drainDelay: 300
-    cloudTerminationDelay: 300
+    cloudTerminationDelay: 120
+    cloudPrepareTerminationDelay: 300
     port: 8080
 #    nodeLeaseNamespace: "kube-node-lease"
     nodeSelector: ""

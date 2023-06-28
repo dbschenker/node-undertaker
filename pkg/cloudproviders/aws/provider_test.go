@@ -29,9 +29,31 @@ func TestCreateAwsCloudProvider(t *testing.T) {
 	assert.NotNil(t, ret.Ec2Client)
 }
 
-func TestTerminateNodeNotInLB(t *testing.T) {
+func TestTerminatNode(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	ec2Client := mockaws.NewMockEC2CLIENT(mockCtrl)
+
+	instanceId := "i-12312313"
+
+	expectedInput := ec2.TerminateInstancesInput{
+		InstanceIds: []string{
+			instanceId,
+		},
+	}
+
+	ec2Client.EXPECT().TerminateInstances(gomock.Any(), &expectedInput).Return(nil, nil).Times(1)
+
+	cloudProvider := AwsCloudProvider{
+		Ec2Client: ec2Client,
+	}
+
+	res, err := cloudProvider.TerminateNode(context.TODO(), "aws://nonexistant/"+instanceId)
+	assert.NoError(t, err)
+	assert.Equal(t, TerminationEventActionSucceeded, res)
+}
+
+func TestPrepareTerminationNodeNotInLB(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
 	elbClient := mockaws.NewMockELBCLIENT(mockCtrl)
 	elbv2Client := mockaws.NewMockELBV2CLIENT(mockCtrl)
 	asgClient := mockaws.NewMockASGCLIENT(mockCtrl)
@@ -49,27 +71,18 @@ func TestTerminateNodeNotInLB(t *testing.T) {
 
 	asgClient.EXPECT().DescribeAutoScalingInstances(gomock.Any(), &expectedAsgInput).Return(&expectedAsgOutput, nil).Times(1)
 
-	expectedInput := ec2.TerminateInstancesInput{
-		InstanceIds: []string{
-			instanceId,
-		},
-	}
-
-	ec2Client.EXPECT().TerminateInstances(gomock.Any(), &expectedInput).Return(nil, nil).Times(1)
-
 	cloudProvider := AwsCloudProvider{
-		Ec2Client:   ec2Client,
 		AsgClient:   asgClient,
 		Elbv2Client: elbv2Client,
 		ElbClient:   elbClient,
 	}
 
-	res, err := cloudProvider.TerminateNode(context.TODO(), "aws://nonexistant/"+instanceId)
+	res, err := cloudProvider.PrepareTermination(context.TODO(), "aws://nonexistant/"+instanceId)
 	assert.NoError(t, err)
-	assert.Equal(t, TerminationEventActionSucceeded, res)
+	assert.Equal(t, PrepareTerminationEventActionSucceeded, res)
 }
 
-func TestTerminateNodeInMultipleLB(t *testing.T) {
+func TestPrepareTerminationNodeInMultipleLB(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	ec2Client := mockaws.NewMockEC2CLIENT(mockCtrl)
 	elbClient := mockaws.NewMockELBCLIENT(mockCtrl)
@@ -152,9 +165,9 @@ func TestTerminateNodeInMultipleLB(t *testing.T) {
 		ElbClient:   elbClient,
 	}
 
-	res, err := cloudProvider.TerminateNode(context.TODO(), "aws://nonexistant/"+instanceId)
+	res, err := cloudProvider.PrepareTermination(context.TODO(), "aws://nonexistant/"+instanceId)
 	assert.NoError(t, err)
-	assert.Equal(t, TerminationEventActionLbsDetached, res)
+	assert.Equal(t, PrepareTerminationEventActionSucceeded, res)
 }
 
 func TestTerminateNodeWrongProviderId(t *testing.T) {
@@ -167,6 +180,18 @@ func TestTerminateNodeWrongProviderId(t *testing.T) {
 	res, err := cloudProvider.TerminateNode(context.TODO(), "test123")
 	assert.Error(t, err)
 	assert.Equal(t, TerminationEventActionFailed, res)
+}
+
+func TestPrepareTerminationNodeWrongProviderId(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	ec2Client := mockaws.NewMockEC2CLIENT(mockCtrl)
+
+	cloudProvider := AwsCloudProvider{
+		Ec2Client: ec2Client,
+	}
+	res, err := cloudProvider.PrepareTermination(context.TODO(), "test123")
+	assert.Error(t, err)
+	assert.Equal(t, PrepareTerminationEventActionFailed, res)
 }
 
 func TestGetAsgForInstanceNone(t *testing.T) {

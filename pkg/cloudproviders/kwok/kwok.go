@@ -49,3 +49,7 @@ func (p KwokCloudProvider) TerminateNode(ctx context.Context, cloudProviderNodeI
 	}
 	return "Instance Terminated", nil
 }
+
+func (p KwokCloudProvider) PrepareTermination(ctx context.Context, cloudProviderNodeId string) (string, error) {
+	return "No preparation required", nil
+}

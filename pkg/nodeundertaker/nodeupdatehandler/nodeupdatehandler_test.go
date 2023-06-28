@@ -298,9 +298,9 @@ func TestNodeUpdateInternalUnhealthyDrainingLabelRecent(t *testing.T) {
 	node.EXPECT().GetActionTimestamp().Return(time.Now().Add(-5*time.Second), getTimestampErr).Times(1)
 
 	cfg := config.Config{
-		K8sClient:             fake.NewSimpleClientset(),
-		Namespace:             namespaceName,
-		CloudTerminationDelay: 90,
+		K8sClient:                    fake.NewSimpleClientset(),
+		Namespace:                    namespaceName,
+		CloudPrepareTerminationDelay: 90,
 	}
 
 	nodeUpdateInternal(context.TODO(), &cfg, node)
@@ -329,9 +329,77 @@ func TestNodeUpdateInternalUnhealthyDrainingLabelOld(t *testing.T) {
 	node.EXPECT().GetLabel().Return(nodeLabel).Times(1)
 
 	getTimestampCall := node.EXPECT().GetActionTimestamp().Return(time.Now().Add(-100*time.Second), getTimestampErr).Times(1)
-	setLabelCall := node.EXPECT().SetLabel(nodepkg.NodeTerminating)
+	setLabelCall := node.EXPECT().SetLabel(nodepkg.NodePreparingTermination)
 	setTimestampCall := node.EXPECT().SetActionTimestamp(gomock.Any()).Times(1).After(getTimestampCall)
 	node.EXPECT().Save(gomock.Any(), gomock.Any()).Return(saveErr).Times(1).After(setLabelCall).After(setTimestampCall)
+
+	cfg := config.Config{
+		K8sClient:                    fake.NewSimpleClientset(),
+		Namespace:                    namespaceName,
+		CloudPrepareTerminationDelay: 90,
+	}
+
+	nodeUpdateInternal(context.TODO(), &cfg, node)
+	events, evErr := cfg.K8sClient.EventsV1().Events(namespaceName).List(context.TODO(), metav1.ListOptions{})
+	assert.NoError(t, evErr)
+	assert.Len(t, events.Items, 1)
+}
+
+// node grown up &with old lease & label=preparing_termination - should prepare termination and label: termination_prepared
+func TestNodeUpdateInternalPrepareTermination(t *testing.T) {
+	nodeName := "test-node1"
+	namespaceName := "dummy-ns"
+	hasFreshLease := false
+	terminationAction := "CloudInstanceTerminated"
+	var terminationErr error = nil
+	nodeLabel := nodepkg.NodePreparingTermination
+	var hasFreshLeaseErr error = nil
+	mockCtrl := gomock.NewController(t)
+	node := mocknode.NewMockNODE(mockCtrl)
+
+	node.EXPECT().GetName().Return(nodeName).AnyTimes()
+	node.EXPECT().GetKind().Return("Node").AnyTimes()
+
+	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
+	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
+	node.EXPECT().GetLabel().Return(nodeLabel).Times(1)
+	setLabelCall := node.EXPECT().SetLabel(nodepkg.NodeTerminationPrepared).Return().Times(1)
+	setTimestampCall := node.EXPECT().SetActionTimestamp(gomock.Any()).Return().Times(1)
+	node.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil).Times(1).After(setLabelCall).After(setTimestampCall)
+
+	node.EXPECT().PrepareTermination(gomock.Any(), gomock.Any()).Return(terminationAction, terminationErr).Times(1)
+
+	cfg := config.Config{
+		K8sClient: fake.NewSimpleClientset(),
+		Namespace: namespaceName,
+	}
+
+	nodeUpdateInternal(context.TODO(), &cfg, node)
+	events, evErr := cfg.K8sClient.EventsV1().Events(namespaceName).List(context.TODO(), metav1.ListOptions{})
+	assert.NoError(t, evErr)
+	assert.Len(t, events.Items, 1)
+}
+
+// node grown up &with old lease & label=prepared_termination + timestamp is older than CloudPrepareTerminationDelay - should prepare termination and label: terminating
+func TestNodeUpdateInternalPreparedTerminationOld(t *testing.T) {
+	nodeName := "test-node1"
+	namespaceName := "dummy-ns"
+	hasFreshLease := false
+	var getTimestampErr error = nil
+	nodeLabel := nodepkg.NodeTerminationPrepared
+	var hasFreshLeaseErr error = nil
+	mockCtrl := gomock.NewController(t)
+	node := mocknode.NewMockNODE(mockCtrl)
+
+	node.EXPECT().GetName().Return(nodeName).AnyTimes()
+	node.EXPECT().GetKind().Return("Node").AnyTimes()
+
+	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
+	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
+	node.EXPECT().GetLabel().Return(nodeLabel).Times(1)
+	getTimestampCall := node.EXPECT().GetActionTimestamp().Return(time.Now().Add(-100*time.Second), getTimestampErr).Times(1)
+	setLabelCall := node.EXPECT().SetLabel(nodepkg.NodeTerminating).Return().Times(1)
+	node.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil).Times(1).After(setLabelCall).After(getTimestampCall)
 
 	cfg := config.Config{
 		K8sClient:             fake.NewSimpleClientset(),
@@ -345,7 +413,37 @@ func TestNodeUpdateInternalUnhealthyDrainingLabelOld(t *testing.T) {
 	assert.Len(t, events.Items, 1)
 }
 
-// node grown up & with old lease & label=deleting - should terminate the node in cloud + label + annotate + produce event
+// node grown up &with old lease & label=prepared_termination + timestamp is not older than CloudPrepareTerminationDelay - should prepare termination and label: terminating
+func TestNodeUpdateInternalPreparedTerminationRecent(t *testing.T) {
+	nodeName := "test-node1"
+	namespaceName := "dummy-ns"
+	hasFreshLease := false
+	nodeLabel := nodepkg.NodeTerminationPrepared
+	var hasFreshLeaseErr error = nil
+	mockCtrl := gomock.NewController(t)
+	node := mocknode.NewMockNODE(mockCtrl)
+
+	node.EXPECT().GetName().Return(nodeName).AnyTimes()
+	node.EXPECT().GetKind().Return("Node").AnyTimes()
+
+	node.EXPECT().IsGrownUp(gomock.Any()).Return(true).Times(1)
+	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(hasFreshLease, hasFreshLeaseErr).Times(1)
+	node.EXPECT().GetLabel().Return(nodeLabel).Times(1)
+	node.EXPECT().GetActionTimestamp().Return(time.Now().Add(-10*time.Second), nil).Times(1)
+
+	cfg := config.Config{
+		K8sClient:             fake.NewSimpleClientset(),
+		Namespace:             namespaceName,
+		CloudTerminationDelay: 90,
+	}
+
+	nodeUpdateInternal(context.TODO(), &cfg, node)
+	events, evErr := cfg.K8sClient.EventsV1().Events(namespaceName).List(context.TODO(), metav1.ListOptions{})
+	assert.NoError(t, evErr)
+	assert.Len(t, events.Items, 0) //no node was saved
+}
+
+// node grown up & with old lease & label=terminating - should terminate the node in cloud + label + annotate + produce event
 func TestNodeUpdateInternalUnhealthyDeletingOldLease(t *testing.T) {
 	nodeName := "test-node1"
 	namespaceName := "dummy-ns"

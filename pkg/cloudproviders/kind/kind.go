@@ -44,3 +44,7 @@ func (p KindCloudProvider) TerminateNode(ctx context.Context, cloudProviderNodeI
 	}
 	return "Instance Terminated", nil
 }
+
+func (p KindCloudProvider) PrepareTermination(ctx context.Context, cloudProviderNodeId string) (string, error) {
+	return "No preparation required", nil
+}

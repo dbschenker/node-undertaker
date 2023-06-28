@@ -23,11 +23,13 @@ const (
 )
 
 const (
-	NodeUnhealthy   string = "unhealthy"
-	NodeDraining           = "draining"
-	NodeTainted            = "tainted"
-	NodeHealthy            = ""
-	NodeTerminating        = "terminating"
+	NodeUnhealthy            string = "unhealthy"
+	NodeTerminating                 = "terminating"
+	NodeTainted                     = "tainted"
+	NodeDraining                    = "draining"
+	NodeHealthy                     = ""
+	NodePreparingTermination        = "preparing_termination"
+	NodeTerminationPrepared         = "termination_prepared"
 )
 
 type Node struct {
@@ -48,6 +50,7 @@ type NODE interface {
 	Untaint()
 	StartDrain(ctx context.Context, cfg *config.Config)
 	Terminate(ctx context.Context, cfg *config.Config) (string, error)
+	PrepareTermination(ctx context.Context, cfg *config.Config) (string, error)
 	Save(ctx context.Context, cfg *config.Config) error
 	GetName() string
 	GetKind() string
@@ -200,6 +203,10 @@ func (n *Node) StartDrain(ctx context.Context, cfg *config.Config) {
 // Terminate deletes node from cloud provider
 func (n *Node) Terminate(ctx context.Context, cfg *config.Config) (string, error) {
 	return cfg.CloudProvider.TerminateNode(ctx, n.Spec.ProviderID)
+}
+
+func (n *Node) PrepareTermination(ctx context.Context, cfg *config.Config) (string, error) {
+	return cfg.CloudProvider.PrepareTermination(ctx, n.Spec.ProviderID)
 }
 
 // TODO: check if saving whole object works fine. Maybe it should be done using patches:  https://stackoverflow.com/questions/57310483/whats-the-shortest-way-to-add-a-label-to-a-pod-using-the-kubernetes-go-client

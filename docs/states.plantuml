@@ -10,18 +10,18 @@ taint_node : label node with:\ndbschenker.com/node-undertaker=tainted
 state "Drain node" as drain_node #orange
 drain_node : label node with:\ndbschenker.com/node-undertaker=draining
 drain_node : drain node
-state "Terminating node" as terminating_node #red
-terminating_node : label node with:\ndbschenker.com/node-undertaker=terminating
-state "Terminating in the cloud" as terminate_in_the_cloud #brown;text:white
-terminate_in_the_cloud : <color:white>remove resources from cloud provider
+state "Prepare node termination" as prepare_termination #red
+prepare_termination : label node with:\ndbschenker.com/node-undertaker=prepare_termination
+state "<color:white>Terminating node" as terminating_node #darkred;text:white
+terminating_node : <color:white>label node with:\n<color:white>dbschenker.com/node-undertaker=terminating
 
 [*] --> healthy
 healthy --> label_node : lease not refreshed
 label_node --> taint_node : on update
 taint_node --> drain_node : after "drain-delay" seconds
-drain_node --> terminating_node : after "cloud-termination-delay" seconds
-terminating_node -> terminate_in_the_cloud : on update
-terminate_in_the_cloud --> [*]
+drain_node --> prepare_termination : after "cloud-prepare-termination-delay" seconds
+prepare_termination --> terminating_node : after "cloud-termination-delay"
+terminating_node -->  [*]
 
 label_node -[#green]-> healthy : <color:green>lease refreshed
 taint_node -[#green]-> healthy : <color:green>lease refreshed

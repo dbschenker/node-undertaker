@@ -13,21 +13,22 @@ import (
 )
 
 type Config struct {
-	CloudProvider         cloudproviders.CLOUDPROVIDER
-	DrainDelay            int
-	CloudTerminationDelay int
-	NodeInitialThreshold  int
-	Port                  int
-	K8sClient             kubernetes.Interface
-	InformerResync        time.Duration
-	Namespace             string
-	Hostname              string
-	LeaseLockName         string
-	LeaseLockNamespace    string
-	NodeLeaseNamespace    string
-	InitialDelay          int
-	StartupTime           time.Time
-	NodeSelector          labels.Selector
+	CloudProvider                cloudproviders.CLOUDPROVIDER
+	DrainDelay                   int
+	CloudTerminationDelay        int
+	CloudPrepareTerminationDelay int
+	NodeInitialThreshold         int
+	Port                         int
+	K8sClient                    kubernetes.Interface
+	InformerResync               time.Duration
+	Namespace                    string
+	Hostname                     string
+	LeaseLockName                string
+	LeaseLockNamespace           string
+	NodeLeaseNamespace           string
+	InitialDelay                 int
+	StartupTime                  time.Time
+	NodeSelector                 labels.Selector
 }
 
 func GetConfig() (*Config, error) {
@@ -35,6 +36,7 @@ func GetConfig() (*Config, error) {
 	ret.InformerResync = 60 * time.Second
 	ret.DrainDelay = viper.GetInt(flags.DrainDelayFlag)
 	ret.CloudTerminationDelay = viper.GetInt(flags.CloudTerminationDelayFlag)
+	ret.CloudPrepareTerminationDelay = viper.GetInt(flags.CloudPrepareTerminationDelayFlag)
 	ret.Port = viper.GetInt(flags.PortFlag)
 	ret.Namespace = viper.GetString(flags.NamespaceFlag)
 	ret.LeaseLockNamespace = viper.GetString(flags.LeaseLockNamespaceFlag)

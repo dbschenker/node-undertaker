@@ -21,6 +21,7 @@ func TestGetConfigOk(t *testing.T) {
 	portValue := 1
 	drainDelay := 29
 	cloudTerminationDelay := 234
+	cloudPrepareTerminationDelay := 544
 	namespace := "ns1"
 	leaseLockNamespace := "ns2"
 	leaseLockName := "lease-lock1"
@@ -29,6 +30,8 @@ func TestGetConfigOk(t *testing.T) {
 	viper.Set(flags.PortFlag, portValue)
 	viper.Set(flags.DrainDelayFlag, drainDelay)
 	viper.Set(flags.CloudTerminationDelayFlag, cloudTerminationDelay)
+	viper.Set(flags.CloudPrepareTerminationDelayFlag, cloudPrepareTerminationDelay)
+
 	viper.Set(flags.LeaseLockNamespaceFlag, leaseLockNamespace)
 	viper.Set(flags.NamespaceFlag, namespace)
 	viper.Set(flags.LeaseLockNameFlag, leaseLockName)
@@ -43,6 +46,7 @@ func TestGetConfigOk(t *testing.T) {
 	assert.Equal(t, leaseLockName, ret.LeaseLockName)
 	assert.Equal(t, leaseLockNamespace, ret.LeaseLockNamespace)
 	assert.Equal(t, drainDelay, ret.DrainDelay)
+	assert.Equal(t, cloudPrepareTerminationDelay, ret.CloudPrepareTerminationDelay)
 	assert.Equal(t, cloudTerminationDelay, ret.CloudTerminationDelay)
 	assert.Equal(t, namespace, ret.Namespace)
 	assert.Nil(t, ret.NodeSelector)

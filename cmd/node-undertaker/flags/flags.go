@@ -8,21 +8,22 @@ import (
 )
 
 const (
-	LogLevelFlag              = "log-level"
-	LogFormatFlag             = "log-format"
-	CloudProviderFlag         = "cloud-provider"
-	InitialDelayFlag          = "initial-delay"
-	DrainDelayFlag            = "drain-delay"
-	CloudTerminationDelayFlag = "cloud-termination-delay"
-	PortFlag                  = "port"
-	NodeInitialThresholdFlag  = "node-initial-threshold"
-	NodeLeaseNamespaceFlag    = "node-lease-namespace"
-	NamespaceFlag             = "namespace"
-	LeaseLockNameFlag         = "lease-lock-name"
-	LeaseLockNamespaceFlag    = "lease-lock-namespace"
-	LogFormatJson             = "json"
-	LogFormatText             = "text"
-	NodeSelectorFlag          = "node-selector"
+	LogLevelFlag                     = "log-level"
+	LogFormatFlag                    = "log-format"
+	CloudProviderFlag                = "cloud-provider"
+	InitialDelayFlag                 = "initial-delay"
+	DrainDelayFlag                   = "drain-delay"
+	CloudTerminationDelayFlag        = "cloud-termination-delay"
+	CloudPrepareTerminationDelayFlag = "cloud-prepare-termination-delay"
+	PortFlag                         = "port"
+	NodeInitialThresholdFlag         = "node-initial-threshold"
+	NodeLeaseNamespaceFlag           = "node-lease-namespace"
+	NamespaceFlag                    = "namespace"
+	LeaseLockNameFlag                = "lease-lock-name"
+	LeaseLockNamespaceFlag           = "lease-lock-namespace"
+	LogFormatJson                    = "json"
+	LogFormatText                    = "text"
+	NodeSelectorFlag                 = "node-selector"
 )
 
 func SetupFlags(cmd *cobra.Command) error {
@@ -46,8 +47,10 @@ func SetupFlags(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	cmd.PersistentFlags().Int(CloudTerminationDelayFlag, 300, "Terminate unhealthy node after number of seconds after starting drain (env: CLOUD_TERMINATION_DELAY)")
+	cmd.PersistentFlags().Int(CloudTerminationDelayFlag, 300, "Terminate unhealthy node after number of seconds after starting termination preparation (env: CLOUD_TERMINATION_DELAY)")
 	err = viper.BindPFlag(CloudTerminationDelayFlag, cmd.PersistentFlags().Lookup(CloudTerminationDelayFlag))
+	cmd.PersistentFlags().Int(CloudPrepareTerminationDelayFlag, 300, "Prepare termination of unhealthy node after number of seconds after starting drain (env: CLOUD_PREPARE_TERMINATION_DELAY)")
+	err = viper.BindPFlag(CloudPrepareTerminationDelayFlag, cmd.PersistentFlags().Lookup(CloudPrepareTerminationDelayFlag))
 	cmd.PersistentFlags().Int(NodeInitialThresholdFlag, 120, "Node is skipped until this number of seconds passes since creation (env: NODE_INITIAL_THRESHOLD)")
 	err = viper.BindPFlag(NodeInitialThresholdFlag, cmd.PersistentFlags().Lookup(NodeInitialThresholdFlag))
 	if err != nil {

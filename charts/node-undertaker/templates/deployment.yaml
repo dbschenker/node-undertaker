@@ -32,6 +32,8 @@ spec:
               value: {{ .Values.controller.settings.cloudProvider }}
             - name: NODE_INITIAL_THRESHOLD
               value: {{ .Values.controller.settings.nodeInitialThreshold | quote }}
+            - name: CLOUD_PREPARE_TERMINATION_DELAY
+              value: {{ .Values.controller.settings.cloudPrepareTerminationDelay | quote }}
             - name: CLOUD_TERMINATION_DELAY
               value: {{ .Values.controller.settings.cloudTerminationDelay | quote }}
             - name: DRAIN_DELAY

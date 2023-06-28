@@ -42,6 +42,46 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 		}
 		nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Termination", reason, "", "")
 		return
+	} else if nodeLabel == nodepkg.NodePreparingTermination {
+		reason, err := n.PrepareTermination(ctx, cfg)
+		if err != nil {
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Prepare Termination", reason, err.Error(), "")
+			return
+		}
+
+		n.SetActionTimestamp(time.Now())
+		n.SetLabel(nodepkg.NodeTerminationPrepared)
+		err = n.Save(ctx, cfg)
+		if err != nil {
+			log.Errorf("Received error while saving node %s: %v", n.GetName(), err)
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Prepare Termination", "Prepare Termination failed", err.Error(), "")
+			return
+		}
+
+		nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Termination prepared", reason, "", "")
+		return
+	} else if nodeLabel == nodepkg.NodeTerminationPrepared {
+		nodeModificationTimestamp, err := n.GetActionTimestamp()
+		if err != nil {
+			log.Errorf("Node %s: timestamp is not parsed properly: %v", n.GetName(), err)
+			return
+		}
+		timestampShouldBeBefore := time.Now().Add(-time.Duration(cfg.CloudTerminationDelay) * time.Second)
+		if nodeModificationTimestamp.After(timestampShouldBeBefore) {
+			log.Infof("%s/%s: prepared for termintaion less than %d seconds ago", n.GetKind(), n.GetName(), cfg.CloudTerminationDelay)
+			return
+		}
+
+		n.SetLabel(nodepkg.NodeTerminating)
+		err = n.Save(ctx, cfg)
+		if err != nil {
+			log.Errorf("Received error while saving node %s: %v", n.GetName(), err)
+			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Label", "Label terminating failed", err.Error(), "")
+			return
+		}
+
+		nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "LabelTerminating", "Labeled terminating", "", "")
+		return
 	}
 
 	if fresh {
@@ -109,23 +149,22 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 				log.Errorf("Node %s: timestamp is not parsed properly: %v", n.GetName(), err)
 				return
 			}
-			timestampShouldBeBefore := time.Now().Add(-time.Duration(cfg.CloudTerminationDelay) * time.Second)
+			timestampShouldBeBefore := time.Now().Add(-time.Duration(cfg.CloudPrepareTerminationDelay) * time.Second)
 			if nodeModificationTimestamp.After(timestampShouldBeBefore) {
-				log.Infof("%s/%s: drained less than %d seconds ago", n.GetKind(), n.GetName(), cfg.CloudTerminationDelay)
+				log.Infof("%s/%s: drained less than %d seconds ago", n.GetKind(), n.GetName(), cfg.CloudPrepareTerminationDelay)
 				return
 			}
 
 			n.SetActionTimestamp(time.Now())
-			n.SetLabel(nodepkg.NodeTerminating)
+			n.SetLabel(nodepkg.NodePreparingTermination)
 			err = n.Save(ctx, cfg)
 			if err != nil {
 				log.Errorf("Received error while saving node %s: %v", n.GetName(), err)
-				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Label", "Label Terminating Failed", err.Error(), "")
+				nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "Label", "Label Prepare Termination Failed", err.Error(), "")
 				return
 			}
 
-			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Termination", "Instance terminating", "", "")
-		//case nodepkg.NodeTerminating: Shouldn't be handled here
+			nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "Prepare Termination", "Instance preparing for termination", "", "")
 		default:
 			nodepkg.ReportEvent(ctx, cfg, log.ErrorLevel, n, "NodeUpdate", "Node Update Failed", fmt.Sprintf("unknown label value found: %s", label), "")
 		}
