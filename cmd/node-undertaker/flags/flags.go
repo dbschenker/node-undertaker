@@ -85,7 +85,7 @@ func SetupFlags(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	cmd.PersistentFlags().Int(InitialDelayFlag, 60, "Initial delay from start of node-undertaker pod until starts handling node state changes. Default: '60'. Can be set using INITIAL_DELAY env variable")
+	cmd.PersistentFlags().Int(InitialDelayFlag, 0, "Initial delay from start of node-undertaker pod until starts handling node state changes. Default: '0'. Can be set using INITIAL_DELAY env variable")
 	err = viper.BindPFlag(InitialDelayFlag, cmd.PersistentFlags().Lookup(InitialDelayFlag))
 	if err != nil {
 		return err
