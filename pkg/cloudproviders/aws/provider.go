@@ -11,6 +11,7 @@ import (
 	elasticloadbalancingtypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elasticloadbalancingv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	log "github.com/sirupsen/logrus"
 	awscloudproviderv1 "k8s.io/cloud-provider-aws/pkg/providers/v1"
 )
 
@@ -85,6 +86,7 @@ func (p AwsCloudProvider) terminateInstance(ctx context.Context, instanceId stri
 			string(instanceId),
 		},
 	}
+	log.Debugf("EC2 Instance %s will be terminated in AWS", string(instanceId))
 	_, err := p.Ec2Client.TerminateInstances(ctx, &input)
 	return err
 }
@@ -130,6 +132,8 @@ func (p AwsCloudProvider) getTrafficSourcesForAsg(ctx context.Context, asgName *
 
 func (p AwsCloudProvider) detachInstanceFromTrafficSources(ctx context.Context, sources []autoscalingtypes.TrafficSourceState, instanceId string) error {
 	for i := range sources {
+		log.Debugf("Detaching instance %s from %s %s", instanceId, *sources[i].Type, *sources[i].Identifier)
+
 		if *sources[i].Type == "elb" {
 			input := elasticloadbalancing.DeregisterInstancesFromLoadBalancerInput{
 				LoadBalancerName: sources[i].Identifier,
