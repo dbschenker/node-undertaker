@@ -51,12 +51,11 @@ func SetupFlags(cmd *cobra.Command) error {
 	err = viper.BindPFlag(CloudTerminationDelayFlag, cmd.PersistentFlags().Lookup(CloudTerminationDelayFlag))
 	cmd.PersistentFlags().Int(CloudPrepareTerminationDelayFlag, 300, "Prepare termination of unhealthy node after number of seconds after starting drain (env: CLOUD_PREPARE_TERMINATION_DELAY)")
 	err = viper.BindPFlag(CloudPrepareTerminationDelayFlag, cmd.PersistentFlags().Lookup(CloudPrepareTerminationDelayFlag))
-	cmd.PersistentFlags().Int(NodeInitialThresholdFlag, 120, "Node is skipped until this number of seconds passes since creation (env: NODE_INITIAL_THRESHOLD)")
-	err = viper.BindPFlag(NodeInitialThresholdFlag, cmd.PersistentFlags().Lookup(NodeInitialThresholdFlag))
 	if err != nil {
 		return err
 	}
-
+	cmd.PersistentFlags().Int(NodeInitialThresholdFlag, 120, "Node is skipped until this number of seconds passes since creation (env: NODE_INITIAL_THRESHOLD)")
+	err = viper.BindPFlag(NodeInitialThresholdFlag, cmd.PersistentFlags().Lookup(NodeInitialThresholdFlag))
 	if err != nil {
 		panic(err)
 	}
