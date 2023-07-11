@@ -37,6 +37,7 @@ Docker Release:
 Deploy Dev Manual:
   rules:
   - when: never
+
 Deploy Fat:
   rules:
     - when: never
