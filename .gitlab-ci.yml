@@ -33,6 +33,7 @@ Dependency-Track:
 Docker Release:
   variables:
     PROJECT_VERSION: "${CI_COMMIT_REF_NAME}"
+
 Deploy Dev Manual:
   rules:
   - when: never
