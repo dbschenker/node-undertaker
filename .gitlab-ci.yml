@@ -5,8 +5,8 @@ image: golang:1.20
 
 include:
   - project: shared-scripts/gitlab-ci
-    file: /autodevops-golang-1.19.yml
-    ref: golang-pipeline
+    file: /autodevops-golang.yml
+    ref: v1
 
 # mockgen setup
 Test:
