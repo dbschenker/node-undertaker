@@ -1,7 +1,7 @@
 variables:
   TYPE: app
 
-image: golang:1.20
+image: golang:1.21
 
 include:
   - project: shared-scripts/gitlab-ci
