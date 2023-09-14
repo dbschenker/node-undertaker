@@ -61,7 +61,7 @@ func nodeUpdateInternal(ctx context.Context, cfg *config.Config, n nodepkg.NODE)
 		case nodepkg.NodeHealthy:
 			makeNodeUnhealthy(ctx, cfg, n)
 		case nodepkg.NodeUnhealthy:
-			makeNodeTainted(ctx, cfg, n)
+			taintNode(ctx, cfg, n)
 		case nodepkg.NodeTainted:
 			drainNode(ctx, cfg, n)
 		case nodepkg.NodeDraining:
@@ -154,7 +154,7 @@ func makeNodeUnhealthy(ctx context.Context, cfg *config.Config, n nodepkg.NODE) 
 	nodepkg.ReportEvent(ctx, cfg, log.InfoLevel, n, "LabeledUnhealthy", "Labeled unhealthy", "", "")
 }
 
-func makeNodeTainted(ctx context.Context, cfg *config.Config, n nodepkg.NODE) {
+func taintNode(ctx context.Context, cfg *config.Config, n nodepkg.NODE) {
 	n.Taint()
 	n.SetActionTimestamp(time.Now())
 	n.SetLabel(nodepkg.NodeTainted)
