@@ -1,0 +1,71 @@
+on:
+  push:
+    paths-ignore:
+      - 'charts/**'
+      - 'example/**'
+      - 'docs/**'
+      - '/*.md'
+    branches:
+      - '*'
+  pull_request:
+    paths-ignore:
+      - 'example/**'
+      - 'charts/**'
+      - 'docs/**'
+      - '/*.md'
+  workflow_call:
+
+name: Build and test
+jobs:
+  build:
+    strategy:
+      matrix:
+        architecture: [amd64, arm64]
+        os: [linux, darwin]
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.21.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.21.x
+        id: go
+
+      - name: Cache Go modules packages
+        uses: actions/cache@v2.1.7
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download Go modules
+        run: go mod download
+        env:
+          GOPROXY: https://proxy.golang.org
+
+      - name: Set ldflags version
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        run: |
+          echo LDFLAGS="-ldflags=\"-X 'main.Version=${{ github.ref_name }}' -X 'k8s.io/component-base/version.gitVersion=${{ github.ref_name }}'"\" >> $GITHUB_ENV
+
+
+      - name: Build
+        run: GOOS=${{ matrix.os }} GOARCH=${{matrix.architecture}} go build ${{ env.LDFLAGS }} -o bin/node-undertaker-${{ matrix.os }}-${{ matrix.architecture }} ./cmd/node-undertaker
+
+      - name: Version
+        if: matrix.os == 'linux' && matrix.architecture == 'amd64'
+        run: bin/node-undertaker-${{ matrix.os }}-${{ matrix.architecture }} --version
+
+      - name: Test
+        run: go test ./...
+
+      - uses: actions/upload-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          name: node-undertaker
+          path: bin/node-undertaker-*
+          if-no-files-found: error
