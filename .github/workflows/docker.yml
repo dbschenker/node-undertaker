@@ -74,7 +74,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64,linux/arm64,darwin/arm64,darwin/amd64
+          platforms: linux/amd64,linux/arm64 #,darwin/arm64,darwin/amd64
           build-args: ${{ github.event_name == 'push' && github.ref_type == 'tag' && format('RELEASE_VERSION={0}', github.ref_name) || '' }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
           cache-to: ${{ github.event_name != 'pull_request' && format( 'type=registry,ref={0}/{1}:buildcache,mode=max', env.REGISTRY, env.IMAGE_NAME ) || '' }}
