@@ -61,7 +61,11 @@ jobs:
         run: bin/node-undertaker-${{ matrix.os }}-${{ matrix.architecture }} --version
 
       - name: Test
-        run: go test ./...
+        run: |
+          go get github.com/golang/mock/mockgen
+          go install github.com/golang/mock/mockgen
+          go generate ./...
+          go test ./...
 
       - uses: actions/upload-artifact@v3
         if: github.event_name != 'pull_request'
