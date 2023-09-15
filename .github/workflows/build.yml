@@ -29,18 +29,18 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
-          cache: false # we use caching with actions/cache
+          cache: true
         id: go
 
-      - name: Cache Go modules packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+#      - name: Cache Go modules packages
+#        uses: actions/cache@v3
+#        with:
+#          path: |
+#            ~/.cache/go-build
+#            ~/go/pkg/mod
+#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+#          restore-keys: |
+#            ${{ runner.os }}-go-
 
       - name: Checkout code
         uses: actions/checkout@v4
