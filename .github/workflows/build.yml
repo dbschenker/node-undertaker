@@ -25,6 +25,9 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Set up Go 1.21.x
         uses: actions/setup-go@v4
         with:
@@ -41,9 +44,6 @@ jobs:
 #          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
 #          restore-keys: |
 #            ${{ runner.os }}-go-
-
-      - name: Checkout code
-        uses: actions/checkout@v4
 
       - name: Download Go modules
         run: go mod download
