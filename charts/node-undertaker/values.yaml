@@ -1,0 +1,82 @@
+# Default values for node-undertaker.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+controller:
+  replicaCount: 2
+
+  port: 8080
+
+  pdb:
+    enabled: true
+    maxUnavailable: 1
+
+  image:
+    repository: "ghcr.io/dbschenker/node-undertaker"
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
+  imagePullSecrets: []
+
+  rbac:
+    # Specified if the roles and their bindings should be created
+    create: true
+
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+
+  podAnnotations: {}
+# to enable scraping metrics please uncomment those lines
+#    prometheus.io/scrape: 'true'
+#    prometheus.io/path: '/metrics'
+#    prometheus.io/port: '8080'
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
+
+  resources:
+    limits:
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  env:
+    CLOUD_PROVIDER: aws
+    # LOG_LEVEL: info
+    LOG_FORMAT: json
+    # LEASE_LOCK_NAME: null
+    # LEASE_LOCK_NAMESPACE: null
+    # NAMESPACE: null
+    NODE_INITIAL_THRESHOLD: "120"
+    DRAIN_DELAY: "300"
+    CLOUD_TERMINATION_DELAY: "120"
+    CLOUD_PREPARE_TERMINATION_DELAY: "300"
+    # NODE_LEASE_NAMESPACE: "kube-node-lease"
+    # NODE_SELECTOR: ""
+    # AWS_REGION: ""
+

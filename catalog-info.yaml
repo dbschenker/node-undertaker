@@ -1,0 +1,22 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: node-undertaker
+  description: Node undertaker terminates kubernetes nodes that are unhealthy
+  annotations:
+    # project key in sonarqube
+    sonarqube.org/project-key: 'gilds-git.signintra.com_aws-dctf_kubernetes_node-undertaker'
+    # Mark for backstage that this Component has techdocs included
+    backstage.io/techdocs-ref: dir:.
+  links: []
+  tags:
+    - no-kpi
+spec:
+  type: service
+  lifecycle: experimental
+  owner: devops-platforms
+  system: toolbox
+  partOf:
+    - component:default/toolbox-kubernetes-cluster
+  dependsOn:
+    - component:default/version-control-system
