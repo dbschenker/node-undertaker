@@ -4,6 +4,10 @@ local
 bin
 .git
 .gitignore
+.github
+charts
+docs
+example
 Dockerfile
 .gitlab-ci.yml
 env.local
