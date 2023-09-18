@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    app: test
+  name: test
+  namespace: test
+spec:
+  maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: test

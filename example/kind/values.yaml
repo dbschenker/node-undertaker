@@ -1,0 +1,12 @@
+controller:
+  settings:
+    cloudProvider: kind
+    logLevel: debug
+    logFormat: text
+    drainDelay: 150
+    nodeInitialThreshold: 60
+    cloudTerminationDelay: 150
+
+  image:
+    repository: node-undertaker
+    tag: local

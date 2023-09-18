@@ -1,0 +1,15 @@
+.idea
+.code
+local
+bin
+.git
+.gitignore
+Dockerfile
+.gitlab-ci.yml
+env.local
+docker-compose*
+Makefile
+README.md
+sonar-project.properties
+*.iml
+.dockerignore
