@@ -5,7 +5,7 @@ metadata:
   description: Node undertaker terminates kubernetes nodes that are unhealthy
   annotations:
     # project key in sonarqube
-    sonarqube.org/project-key: 'gilds-git.signintra.com_aws-dctf_kubernetes_node-undertaker'
+    sonarqube.org/project-key: 'github.com_dbschenker_node-undertaker'
     # Mark for backstage that this Component has techdocs included
     backstage.io/techdocs-ref: dir:.
   links: []
