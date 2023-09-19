@@ -1,0 +1,13 @@
+{{- if and .Values.controller.pdb.enabled (gt .Values.controller.replicaCount 1.0) }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  labels:
+    {{- include "node-undertaker.labels" . | nindent 4 }}
+  name: {{ include "node-undertaker.fullname" . }}-controller
+spec:
+  maxUnavailable: {{ .Values.controller.pdb.maxUnavailable }}
+  selector:
+    matchLabels:
+      {{- include "node-undertaker.selectorLabels" . | nindent 6 }}
+{{- end }}

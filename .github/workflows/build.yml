@@ -1,0 +1,58 @@
+on:
+  push:
+    paths-ignore:
+      - 'charts/**'
+      - 'example/**'
+      - 'docs/**'
+      - '/*.md'
+    branches:
+      - '*'
+  pull_request:
+    paths-ignore:
+      - 'example/**'
+      - 'charts/**'
+      - 'docs/**'
+      - '/*.md'
+  workflow_call:
+
+name: Build and test
+jobs:
+  build:
+    strategy:
+      matrix:
+        architecture: [amd64, arm64]
+        os: [linux, darwin]
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go 1.21.x
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+        id: go
+
+      - name: Download Go modules
+        run: go mod download
+        env:
+          GOPROXY: https://proxy.golang.org
+
+      - name: Build
+        run: GOOS=${{ matrix.os }} GOARCH=${{matrix.architecture}} go build ${{ env.LDFLAGS }} -o bin/node-undertaker-${{ matrix.os }}-${{ matrix.architecture }} ./cmd/node-undertaker
+
+      - name: Test
+        run: |
+          go get github.com/golang/mock/mockgen
+          go install github.com/golang/mock/mockgen
+          go generate ./...
+          go test ./...
+
+      - uses: actions/upload-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          name: node-undertaker-binaries
+          path: bin/node-undertaker-*
+          if-no-files-found: error

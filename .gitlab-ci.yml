@@ -1,0 +1,43 @@
+variables:
+  TYPE: app
+
+image: golang:1.21
+
+include:
+  - project: shared-scripts/gitlab-ci
+    file: /autodevops-golang.yml
+    ref: v1
+
+# mockgen setup
+Test:
+  before_script:
+    - export PATH=$GOPATH/bin:$PATH
+    - go get github.com/golang/mock/mockgen
+    - go install github.com/golang/mock/mockgen
+Vet:
+  before_script:
+    - export PATH=$GOPATH/bin:$PATH
+    - go get github.com/golang/mock/mockgen
+    - go install github.com/golang/mock/mockgen
+Build:
+  before_script:
+    - export PATH=$GOPATH/bin:$PATH
+    - go get github.com/golang/mock/mockgen
+    - go install github.com/golang/mock/mockgen
+Dependency-Track:
+  before_script:
+  - export PATH=$GOPATH/bin:$PATH
+  - go get github.com/golang/mock/mockgen
+  - go install github.com/golang/mock/mockgen
+
+Docker Release:
+  variables:
+    PROJECT_VERSION: "${CI_COMMIT_REF_NAME}"
+
+Deploy Dev Manual:
+  rules:
+  - when: never
+
+Deploy Fat:
+  rules:
+    - when: never
