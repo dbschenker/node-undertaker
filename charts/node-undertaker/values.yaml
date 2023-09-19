@@ -79,4 +79,3 @@ controller:
     # NODE_LEASE_NAMESPACE: "kube-node-lease"
     # NODE_SELECTOR: ""
     # AWS_REGION: ""
-
