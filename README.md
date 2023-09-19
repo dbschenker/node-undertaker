@@ -119,3 +119,9 @@ Cleanup: `kwokctl delete cluster`
 4. Install with helm: `make kind_helm`
 
 Cleanup: `kind delete cluster`
+
+## Maintainers
+
+This project is maintained by: 
+* Kamil Krzywicki (kamil.krzywicki@dbschenker.com)
+* Tobias Trabelsi (tobias.trabelsi@dbschenker.com)
