@@ -32,7 +32,7 @@ spec:
               value: {{ .Values.controller.port | quote }}
             {{- range $key, $value := .Values.controller.env }}
             - name: {{ $key }}
-              value: {{ $value }}
+              value: {{ $value | quote }}
             {{- end }}
           securityContext:
             {{- toYaml .Values.controller.securityContext | nindent 12 }}
