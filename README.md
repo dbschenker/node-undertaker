@@ -83,7 +83,7 @@ In case there are more resources than one cluster it is advised to limit access 
 
 1. First add helm chart repository:
    ```
-   helm repo add dbschenker https://dbschenker.github.io/node-undertaker
+   helm repo add node-undertaker https://dbschenker.github.io/node-undertaker
    ```
 2. Install helm chart
     ```shell
