@@ -42,5 +42,6 @@ local:
 	bin/node-undertaker --namespace kube-node-lease --log-level=debug --cloud-provider=kwok --cloud-termination-delay=180 --cloud-prepare-termination-delay=200 --drain-delay=190 --node-initial-threshold 45
 
 kwok:
-	kwokctl create cluster
+	kwokctl create cluster --node-lease-duration-seconds 0
 	kubectl config use-context kwok-kwok
+	kwokctl get kubeconfig > ~/.kube/kwok.kubeconfig
