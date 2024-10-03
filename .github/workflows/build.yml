@@ -28,7 +28,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Go 1.21.x
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
@@ -45,8 +45,8 @@ jobs:
 
       - name: Test
         run: |
-          go get github.com/golang/mock/mockgen
-          go install github.com/golang/mock/mockgen
+          go get go.uber.org/mock/mockgen
+          go install go.uber.org/mock/mockgen
           go generate ./...
           go test ./...
 
