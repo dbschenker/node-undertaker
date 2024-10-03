@@ -90,6 +90,15 @@ In case there are more resources than one cluster it is advised to limit access 
     helm upgrade --install --create-namespace -n node-undertaker node-undertaker node-undertaker
     ```
 
+## Observability
+
+## Metrics
+
+Node undertaker produces metrics in prometheus format. By default exposed on port 8080 under `/metrics` path.  
+Metrics list:
+* node_undertaker_node_health - metric produced for each node. In labels node, and status are reported.
+
+
 ## Development
 
 ### Requirements
