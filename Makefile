@@ -1,12 +1,14 @@
+gocmd = go1.21.13
+
 all: clean test build
 
 build: build-node-undertaker
 
 build-node-undertaker:
-	go build -o bin/node-undertaker github.com/dbschenker/node-undertaker/cmd/node-undertaker
+	$(gocmd) build -o bin/node-undertaker github.com/dbschenker/node-undertaker/cmd/node-undertaker
 
 test: mock
-	go test ./...
+	$(gocmd)  test ./...
 
 clean:
 	rm -r bin/ || true
@@ -18,7 +20,7 @@ lint:
 	golangci-lint run ./... -v
 
 mock:
-	go generate ./...
+	$(gocmd)  generate ./...
 
 clean_mocks:
 	find . -name '*_mocks.go' -delete
@@ -27,7 +29,7 @@ vuln:
 	govulncheck ./...
 
 vet:
-	go vet ./...
+	$(gocmd)  vet ./...
 
 kind:
 	kind create cluster --config example/kind/config.yaml

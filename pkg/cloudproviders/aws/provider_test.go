@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elasticloadbalancingv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	mockaws "github.com/dbschenker/node-undertaker/pkg/cloudproviders/aws/mocks"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 	"testing"
 )
 

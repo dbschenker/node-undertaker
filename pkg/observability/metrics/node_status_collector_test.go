@@ -5,10 +5,10 @@ package metrics
 import (
 	"github.com/dbschenker/node-undertaker/pkg/nodeundertaker/node"
 	mock_v1 "github.com/dbschenker/node-undertaker/pkg/observability/metrics/mocks"
-	"github.com/golang/mock/gomock"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"

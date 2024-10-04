@@ -13,23 +13,23 @@ include:
 Test:
   before_script:
     - export PATH=$GOPATH/bin:$PATH
-    - go get github.com/golang/mock/mockgen
-    - go install github.com/golang/mock/mockgen
+    - go get go.uber.org/mock/mockgen@latest
+    - go install go.uber.org/mock/mockgen@latest
 Vet:
   before_script:
     - export PATH=$GOPATH/bin:$PATH
-    - go get github.com/golang/mock/mockgen
-    - go install github.com/golang/mock/mockgen
+    - go get go.uber.org/mock/mockgen@latest
+    - go install go.uber.org/mock/mockgen@latest
 Build:
   before_script:
     - export PATH=$GOPATH/bin:$PATH
-    - go get github.com/golang/mock/mockgen
-    - go install github.com/golang/mock/mockgen
+    - go get go.uber.org/mock/mockgen@latest
+    - go install go.uber.org/mock/mockgen@latest
 Dependency-Track:
   before_script:
   - export PATH=$GOPATH/bin:$PATH
-  - go get github.com/golang/mock/mockgen
-  - go install github.com/golang/mock/mockgen
+    - go get go.uber.org/mock/mockgen@latest
+    - go install go.uber.org/mock/mockgen@latest
 
 Docker Release:
   variables:

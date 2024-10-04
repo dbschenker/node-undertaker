@@ -24,6 +24,8 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
+        draft: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+        prerelease: ${{ contains(github.ref, 'rc') }}
         files: bin/node-undertaker*
         append_body: true
         body: |
