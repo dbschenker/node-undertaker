@@ -24,6 +24,7 @@ const (
 	LogFormatJson                    = "json"
 	LogFormatText                    = "text"
 	NodeSelectorFlag                 = "node-selector"
+	NotificationsSlackWebhookFlag    = "notifications-slack-webhook"
 )
 
 func SetupFlags(cmd *cobra.Command) error {
@@ -92,6 +93,11 @@ func SetupFlags(cmd *cobra.Command) error {
 	}
 	cmd.PersistentFlags().String(NodeSelectorFlag, "", "Label selector for nodes to watch. Default: ''. Can be set using NODE_SELECTOR env variable")
 	err = viper.BindPFlag(NodeSelectorFlag, cmd.PersistentFlags().Lookup(NodeSelectorFlag))
+	if err != nil {
+		return err
+	}
+	cmd.PersistentFlags().String(NotificationsSlackWebhookFlag, "", "Slack webhook url for sending notifications. Default: ''. Can be set using NOTIFICATIONS_SLACK_WEBHOOK env variable")
+	err = viper.BindPFlag(NotificationsSlackWebhookFlag, cmd.PersistentFlags().Lookup(NotificationsSlackWebhookFlag))
 	if err != nil {
 		return err
 	}

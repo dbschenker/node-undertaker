@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
+	"net/url"
 	"os"
 	"time"
 )
@@ -29,6 +30,7 @@ type Config struct {
 	InitialDelay                 int
 	StartupTime                  time.Time
 	NodeSelector                 labels.Selector
+	NotificationsSlackWebhook    *url.URL
 }
 
 func GetConfig() (*Config, error) {
@@ -57,6 +59,12 @@ func GetConfig() (*Config, error) {
 		return nil, err
 	}
 	ret.NodeSelector = selectors
+
+	webhook, err := url.Parse(viper.GetString(flags.NotificationsSlackWebhookFlag))
+	if err != nil {
+		return nil, err
+	}
+	ret.NotificationsSlackWebhook = webhook
 
 	return &ret, validateConfig(&ret)
 }
