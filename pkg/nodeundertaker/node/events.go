@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/dbschenker/node-undertaker/pkg/nodeundertaker/config"
+	"github.com/dbschenker/node-undertaker/pkg/slackclient"
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	eventsv1 "k8s.io/api/events/v1"
@@ -65,5 +66,15 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE,
 	_, err := cfg.K8sClient.EventsV1().Events(cfg.Namespace).Create(ctx, &evt, metav1.CreateOptions{})
 	if err != nil {
 		log.Errorf("Couldn't create event: %s\n due to %v", msg, err)
+	}
+	if cfg.NotificationsSlackWebhook != nil {
+		go func() {
+			ctxWebhook, ctxWebhookCancel := context.WithTimeout(ctx, 10*time.Second)
+			defer ctxWebhookCancel()
+			err := slackclient.SendNotification(ctxWebhook, cfg, fmt.Sprintf("%s: %s/%s: %s", strings.ToUpper(lvl.String()), n.GetKind(), n.GetName(), msg))
+			if err != nil {
+				log.Errorf("Error sending notification to slack webhook")
+			}
+		}()
 	}
 }

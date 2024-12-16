@@ -1,4 +1,4 @@
-gocmd = go1.21.13
+gocmd = go
 
 all: clean test build
 
@@ -41,7 +41,7 @@ kind_helm:
 	helm upgrade --install -n node-undertaker node-undertaker charts/node-undertaker --create-namespace -f example/kind/values.yaml
 
 local:
-	bin/node-undertaker --namespace kube-node-lease --log-level=debug --cloud-provider=kwok --cloud-termination-delay=180 --cloud-prepare-termination-delay=200 --drain-delay=190 --node-initial-threshold 45
+	source ./.env && bin/node-undertaker --namespace kube-node-lease --log-level=debug --cloud-provider=kwok --cloud-termination-delay=180 --cloud-prepare-termination-delay=200 --drain-delay=190 --node-initial-threshold 45
 
 kwok:
 	kwokctl create cluster --node-lease-duration-seconds 0
