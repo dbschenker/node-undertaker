@@ -23,7 +23,19 @@ func SendNotification(ctx context.Context, cfg *config.Config, message string) e
 		return fmt.Errorf("error while marshalling slack notification: %v", err)
 	}
 
-	resp, err := http.Post(cfg.NotificationsSlackWebhook.String(), "application/json", bytes.NewBuffer(data))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, cfg.NotificationsSlackWebhook.String(), bytes.NewBuffer(data))
+
+	if err != nil {
+		return err
+	}
+
+	client := http.DefaultClient
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(resp.Body)

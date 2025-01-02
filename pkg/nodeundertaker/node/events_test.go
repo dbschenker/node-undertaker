@@ -162,6 +162,14 @@ func TestReportEventWithKwok(t *testing.T) {
 		Hostname:  hostname,
 	}
 
+	_, err = clientset.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+		},
+	}, metav1.CreateOptions{})
+	assert.NoError(t, err)
+
 	lvl := logrus.ErrorLevel
 	nodev1 := v1.Node{
 		ObjectMeta: metav1.ObjectMeta{Name: nodeName},
