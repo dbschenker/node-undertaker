@@ -15,6 +15,8 @@ func TestGetConfigNegativeValidation(t *testing.T) {
 	viper.Set(flags.DrainDelayFlag, -1)
 	_, err := GetConfig()
 	assert.Error(t, err)
+
+	viper.Reset()
 }
 
 func TestGetConfigOk(t *testing.T) {
@@ -26,6 +28,7 @@ func TestGetConfigOk(t *testing.T) {
 	leaseLockNamespace := "ns2"
 	leaseLockName := "lease-lock1"
 	hostname, _ := os.Hostname()
+	webhook := ""
 
 	viper.Set(flags.PortFlag, portValue)
 	viper.Set(flags.DrainDelayFlag, drainDelay)
@@ -35,6 +38,7 @@ func TestGetConfigOk(t *testing.T) {
 	viper.Set(flags.LeaseLockNamespaceFlag, leaseLockNamespace)
 	viper.Set(flags.NamespaceFlag, namespace)
 	viper.Set(flags.LeaseLockNameFlag, leaseLockName)
+	viper.Set(flags.NotificationsSlackWebhookFlag, webhook)
 
 	ret, err := GetConfig()
 
@@ -49,7 +53,10 @@ func TestGetConfigOk(t *testing.T) {
 	assert.Equal(t, cloudPrepareTerminationDelay, ret.CloudPrepareTerminationDelay)
 	assert.Equal(t, cloudTerminationDelay, ret.CloudTerminationDelay)
 	assert.Equal(t, namespace, ret.Namespace)
+	assert.Nil(t, ret.NotificationsSlackWebhook)
 	assert.Nil(t, ret.NodeSelector)
+
+	viper.Reset()
 }
 
 func TestGetConfigNodeSelectorNok(t *testing.T) {
@@ -59,6 +66,8 @@ func TestGetConfigNodeSelectorNok(t *testing.T) {
 	cfg, err := GetConfig()
 	assert.Nil(t, cfg)
 	assert.Error(t, err)
+
+	viper.Reset()
 }
 
 func TestGetConfigNodeSelectorOk1(t *testing.T) {
@@ -86,6 +95,8 @@ func TestGetConfigNodeSelectorOk1(t *testing.T) {
 	for k := range testLabelSets {
 		assert.Equal(t, testLabelSetResults[k], cfg.NodeSelector.Matches(testLabelSets[k]))
 	}
+
+	viper.Reset()
 }
 
 func TestGetConfigNodeSelectorOk2(t *testing.T) {
@@ -110,6 +121,8 @@ func TestGetConfigNodeSelectorOk2(t *testing.T) {
 	for k := range testLabelSets {
 		assert.Equal(t, testLabelSetResults[k], cfg.NodeSelector.Matches(testLabelSets[k]))
 	}
+
+	viper.Reset()
 }
 
 func TestValidateConfigOk(t *testing.T) {

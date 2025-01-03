@@ -60,11 +60,13 @@ func GetConfig() (*Config, error) {
 	}
 	ret.NodeSelector = selectors
 
-	webhook, err := url.Parse(viper.GetString(flags.NotificationsSlackWebhookFlag))
-	if err != nil {
-		return nil, err
+	if viper.GetString(flags.NotificationsSlackWebhookFlag) != "" {
+		webhook, err := url.Parse(viper.GetString(flags.NotificationsSlackWebhookFlag))
+		if err != nil {
+			return nil, err
+		}
+		ret.NotificationsSlackWebhook = webhook
 	}
-	ret.NotificationsSlackWebhook = webhook
 
 	return &ret, validateConfig(&ret)
 }
