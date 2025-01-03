@@ -13,7 +13,7 @@ metadata:
     - no-kpi
 spec:
   type: service
-  lifecycle: experimental
+  lifecycle: production
   owner: devops-platforms
   system: toolbox
   partOf:
