@@ -86,7 +86,7 @@ func TestStartServerOk(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	defer cancel()
 	cfg := config.Config{}
-	cfg.K8sClient = fake.NewSimpleClientset()
+	cfg.K8sClient = fake.NewClientset()
 	workload := func(ctx2 context.Context) error {
 		select {
 		case <-ctx2.Done():
@@ -115,7 +115,7 @@ func TestStartServerNok(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	defer cancel()
 	cfg := config.Config{}
-	cfg.K8sClient = fake.NewSimpleClientset()
+	cfg.K8sClient = fake.NewClientset()
 
 	workload := func(ctx2 context.Context) error {
 		select {

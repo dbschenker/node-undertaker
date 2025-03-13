@@ -163,7 +163,7 @@ func TestSaveNoChange(t *testing.T) {
 	}
 
 	cfg := config.Config{
-		K8sClient: fake.NewSimpleClientset(),
+		K8sClient: fake.NewClientset(),
 	}
 	_, err := cfg.K8sClient.CoreV1().Nodes().Create(context.TODO(), &nodev1, metav1.CreateOptions{})
 	require.NoError(t, err)
@@ -196,7 +196,7 @@ func TestSaveChange(t *testing.T) {
 	}
 
 	cfg := config.Config{
-		K8sClient: fake.NewSimpleClientset(),
+		K8sClient: fake.NewClientset(),
 	}
 	_, err := cfg.K8sClient.CoreV1().Nodes().Create(context.TODO(), &nodev1, metav1.CreateOptions{})
 	require.NoError(t, err)
@@ -243,7 +243,7 @@ func TestTaintDifferentTaints(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: nodeName},
 		Spec: v1.NodeSpec{
 			Taints: []v1.Taint{
-				v1.Taint{Key: "sample", Value: "different", Effect: v1.TaintEffectPreferNoSchedule},
+				{Key: "sample", Value: "different", Effect: v1.TaintEffectPreferNoSchedule},
 			},
 		},
 	}
@@ -382,7 +382,7 @@ func TestFindLeaseOk(t *testing.T) {
 		},
 	}
 	cfg := config.Config{
-		K8sClient:          fake.NewSimpleClientset(),
+		K8sClient:          fake.NewClientset(),
 		NodeLeaseNamespace: namespace,
 	}
 	_, err := cfg.K8sClient.CoordinationV1().Leases(namespace).Create(context.TODO(), &lease, metav1.CreateOptions{})
@@ -402,7 +402,7 @@ func TestFindLeaseMissing(t *testing.T) {
 	}
 
 	cfg := config.Config{
-		K8sClient: fake.NewSimpleClientset(),
+		K8sClient: fake.NewClientset(),
 		Namespace: namespace,
 	}
 
@@ -433,7 +433,7 @@ func TestHasFreshLeaseOk(t *testing.T) {
 		},
 	}
 	cfg := config.Config{
-		K8sClient:          fake.NewSimpleClientset(),
+		K8sClient:          fake.NewClientset(),
 		NodeLeaseNamespace: namespace,
 	}
 	_, err := cfg.K8sClient.CoordinationV1().Leases(namespace).Create(context.TODO(), &lease, metav1.CreateOptions{})
@@ -466,7 +466,7 @@ func TestHasFreshLeaseNok(t *testing.T) {
 		},
 	}
 	cfg := config.Config{
-		K8sClient: fake.NewSimpleClientset(),
+		K8sClient: fake.NewClientset(),
 		Namespace: namespace,
 	}
 	_, err := cfg.K8sClient.CoordinationV1().Leases(namespace).Create(context.TODO(), &lease, metav1.CreateOptions{})
@@ -488,7 +488,7 @@ func TestHasFreshLeaseNolease(t *testing.T) {
 	}
 
 	cfg := config.Config{
-		K8sClient: fake.NewSimpleClientset(),
+		K8sClient: fake.NewClientset(),
 		Namespace: namespace,
 	}
 
@@ -728,7 +728,8 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 	err = waitForDeploymentPodsReady(ctx, clientset, 60*time.Second, deploymentName, v1.NamespaceDefault, replicaCount)
 	require.NoError(t, err)
 
-	pdpbMaxUnavail := intstr.FromInt(0)
+	pdpbMaxUnavail := intstr.FromInt32(0)
+	unhealthyPolicy := policyv1.AlwaysAllow
 	pdb := policyv1.PodDisruptionBudget{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-pdb",
@@ -741,6 +742,7 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 					"app": deploymentName,
 				},
 			},
+			UnhealthyPodEvictionPolicy: &unhealthyPolicy,
 		},
 	}
 	_, err = clientset.PolicyV1().PodDisruptionBudgets(v1.NamespaceDefault).Create(ctx, &pdb, metav1.CreateOptions{})

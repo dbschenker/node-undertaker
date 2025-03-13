@@ -28,7 +28,7 @@ func TestOnNodeUpdate(t *testing.T) {
 	}
 
 	cfg := config.Config{
-		K8sClient:            fake.NewSimpleClientset(),
+		K8sClient:            fake.NewClientset(),
 		Namespace:            namespaceName,
 		NodeInitialThreshold: 1000,
 	}
@@ -55,7 +55,7 @@ func TestUnknownLabel(t *testing.T) {
 	node.EXPECT().HasFreshLease(gomock.Any(), gomock.Any()).Return(false, nil).Times(1)
 
 	cfg := config.Config{
-		K8sClient: fake.NewSimpleClientset(),
+		K8sClient: fake.NewClientset(),
 		Namespace: namespaceName,
 	}
 
@@ -86,7 +86,7 @@ func TestNodeUpdateInternalNotGrownUp(t *testing.T) {
 	node.EXPECT().IsGrownUp(gomock.Any()).Return(false).Times(1)
 
 	cfg := config.Config{
-		K8sClient: fake.NewSimpleClientset(),
+		K8sClient: fake.NewClientset(),
 		Namespace: namespaceName,
 	}
 
@@ -139,7 +139,7 @@ func TestNodeUpdateInternalHealthyUnhealthyLabel(t *testing.T) {
 	node.EXPECT().Save(gomock.Any(), gomock.Any()).Return(saveErr).Times(1)
 	node.EXPECT().RemoveLabel().Times(1)
 
-	cfg := config.Config{K8sClient: fake.NewSimpleClientset(), Namespace: namespaceName}
+	cfg := config.Config{K8sClient: fake.NewClientset(), Namespace: namespaceName}
 
 	nodeUpdateInternal(context.TODO(), &cfg, node)
 	events, evErr := cfg.K8sClient.EventsV1().Events(namespaceName).List(context.TODO(), metav1.ListOptions{})
@@ -168,7 +168,7 @@ func TestNodeUpdateInternalUnhealthyNoLabel(t *testing.T) {
 	setLabelCall := node.EXPECT().SetLabel(nodepkg.NodeUnhealthy).Times(1)
 	node.EXPECT().Save(gomock.Any(), gomock.Any()).Return(saveErr).Times(1).After(setLabelCall)
 
-	cfg := config.Config{K8sClient: fake.NewSimpleClientset(), Namespace: namespaceName}
+	cfg := config.Config{K8sClient: fake.NewClientset(), Namespace: namespaceName}
 
 	nodeUpdateInternal(context.TODO(), &cfg, node)
 	events, evErr := cfg.K8sClient.EventsV1().Events(namespaceName).List(context.TODO(), metav1.ListOptions{})
@@ -199,7 +199,7 @@ func TestNodeUpdateInternalUnhealthyUnhealthyLabel(t *testing.T) {
 	taintCall := node.EXPECT().Taint().Times(1)
 	node.EXPECT().Save(gomock.Any(), gomock.Any()).Return(saveErr).Times(1).After(setLabelCall).After(setTimestampCall).After(taintCall)
 
-	cfg := config.Config{K8sClient: fake.NewSimpleClientset(), Namespace: namespaceName}
+	cfg := config.Config{K8sClient: fake.NewClientset(), Namespace: namespaceName}
 
 	nodeUpdateInternal(context.TODO(), &cfg, node)
 	events, evErr := cfg.K8sClient.EventsV1().Events(namespaceName).List(context.TODO(), metav1.ListOptions{})
@@ -228,7 +228,7 @@ func TestNodeUpdateInternalUnhealthyTaintedLabelRecent(t *testing.T) {
 	node.EXPECT().GetActionTimestamp().Return(time.Now().Add(-5*time.Second), getTimestampErr).Times(1)
 
 	cfg := config.Config{
-		K8sClient:  fake.NewSimpleClientset(),
+		K8sClient:  fake.NewClientset(),
 		Namespace:  namespaceName,
 		DrainDelay: 90,
 	}
@@ -266,7 +266,7 @@ func TestNodeUpdateInternalUnhealthyTaintedLabelOld(t *testing.T) {
 	node.EXPECT().Save(gomock.Any(), gomock.Any()).Return(saveErr).Times(1).After(drainingCall).After(timestampCall).After(drainCall)
 
 	cfg := config.Config{
-		K8sClient:  fake.NewSimpleClientset(),
+		K8sClient:  fake.NewClientset(),
 		Namespace:  namespaceName,
 		DrainDelay: 90,
 	}
@@ -298,7 +298,7 @@ func TestNodeUpdateInternalUnhealthyDrainingLabelRecent(t *testing.T) {
 	node.EXPECT().GetActionTimestamp().Return(time.Now().Add(-5*time.Second), getTimestampErr).Times(1)
 
 	cfg := config.Config{
-		K8sClient:                    fake.NewSimpleClientset(),
+		K8sClient:                    fake.NewClientset(),
 		Namespace:                    namespaceName,
 		CloudPrepareTerminationDelay: 90,
 	}
@@ -334,7 +334,7 @@ func TestNodeUpdateInternalUnhealthyDrainingLabelOld(t *testing.T) {
 	node.EXPECT().Save(gomock.Any(), gomock.Any()).Return(saveErr).Times(1).After(setLabelCall).After(setTimestampCall)
 
 	cfg := config.Config{
-		K8sClient:                    fake.NewSimpleClientset(),
+		K8sClient:                    fake.NewClientset(),
 		Namespace:                    namespaceName,
 		CloudPrepareTerminationDelay: 90,
 	}
@@ -370,7 +370,7 @@ func TestNodeUpdateInternalPrepareTermination(t *testing.T) {
 	node.EXPECT().PrepareTermination(gomock.Any(), gomock.Any()).Return(terminationAction, terminationErr).Times(1)
 
 	cfg := config.Config{
-		K8sClient: fake.NewSimpleClientset(),
+		K8sClient: fake.NewClientset(),
 		Namespace: namespaceName,
 	}
 
@@ -402,7 +402,7 @@ func TestNodeUpdateInternalPreparedTerminationOld(t *testing.T) {
 	node.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil).Times(1).After(setLabelCall).After(getTimestampCall)
 
 	cfg := config.Config{
-		K8sClient:             fake.NewSimpleClientset(),
+		K8sClient:             fake.NewClientset(),
 		Namespace:             namespaceName,
 		CloudTerminationDelay: 90,
 	}
@@ -432,7 +432,7 @@ func TestNodeUpdateInternalPreparedTerminationRecent(t *testing.T) {
 	node.EXPECT().GetActionTimestamp().Return(time.Now().Add(-10*time.Second), nil).Times(1)
 
 	cfg := config.Config{
-		K8sClient:             fake.NewSimpleClientset(),
+		K8sClient:             fake.NewClientset(),
 		Namespace:             namespaceName,
 		CloudTerminationDelay: 90,
 	}
@@ -465,7 +465,7 @@ func TestNodeUpdateInternalUnhealthyDeletingOldLease(t *testing.T) {
 	node.EXPECT().Terminate(gomock.Any(), gomock.Any()).Return(terminationAction, terminationErr).Times(1)
 
 	cfg := config.Config{
-		K8sClient: fake.NewSimpleClientset(),
+		K8sClient: fake.NewClientset(),
 		Namespace: namespaceName,
 	}
 
@@ -498,7 +498,7 @@ func TestNodeUpdateInternalUnhealthyDeletingFreshLease(t *testing.T) {
 	node.EXPECT().Terminate(gomock.Any(), gomock.Any()).Return(terminationAction, terminationErr).Times(1)
 
 	cfg := config.Config{
-		K8sClient: fake.NewSimpleClientset(),
+		K8sClient: fake.NewClientset(),
 		Namespace: namespaceName,
 	}
 

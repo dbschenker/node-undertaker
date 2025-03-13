@@ -25,5 +25,5 @@ func GetClient() (kubernetes.Interface, string, error) {
 }
 
 func GetFakeClient() (kubernetes.Interface, string, error) {
-	return fake.NewSimpleClientset(), metav1.NamespaceDefault, nil
+	return fake.NewClientset(), metav1.NamespaceDefault, nil
 }

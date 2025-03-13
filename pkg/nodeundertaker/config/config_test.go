@@ -194,7 +194,7 @@ func TestValidateConfigErrInitialDelay(t *testing.T) {
 }
 
 func TestSetK8sClient(t *testing.T) {
-	client := fake.NewSimpleClientset()
+	client := fake.NewClientset()
 	currentNamespace := "test"
 	cfg := Config{}
 	cfg.SetK8sClient(client, currentNamespace)
@@ -205,7 +205,7 @@ func TestSetK8sClient(t *testing.T) {
 }
 
 func TestSetK8sClient1(t *testing.T) {
-	client := fake.NewSimpleClientset()
+	client := fake.NewClientset()
 	currentNamespace := "test"
 	leaseLockNs := "lease-lock-ns"
 	nodeLeaseNs := "node-leases"
