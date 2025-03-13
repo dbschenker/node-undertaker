@@ -19,7 +19,7 @@ docker:
 lint:
 	golangci-lint run ./... -v
 
-mock:
+mock: mockgen
 	$(gocmd)  generate ./...
 
 clean_mocks:
@@ -47,3 +47,6 @@ kwok:
 	kwokctl create cluster --node-lease-duration-seconds 0
 	kubectl config use-context kwok-kwok
 	kwokctl get kubeconfig > ~/.kube/kwok.kubeconfig
+
+mockgen:
+	go install go.uber.org/mock/mockgen@latest
