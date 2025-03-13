@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	KwokImage = "registry.k8s.io/kwok/cluster:v0.6.1-k8s.v1.29.8"
+	KwokImage = "registry.k8s.io/kwok/cluster:v0.6.1-k8s.v1.30.4"
 	KwokPort  = "8080"
 )
 
