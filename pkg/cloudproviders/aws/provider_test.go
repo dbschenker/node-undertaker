@@ -30,26 +30,51 @@ func TestCreateAwsCloudProvider(t *testing.T) {
 }
 
 func TestTerminatNode(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	ec2Client := mockaws.NewMockEC2CLIENT(mockCtrl)
-
-	instanceId := "i-12312313"
-
-	expectedInput := ec2.TerminateInstancesInput{
-		InstanceIds: []string{
-			instanceId,
+	tc := []struct {
+		name                     string
+		instanceId               string
+		instanceTerminationError error
+		expectedError            error
+		expectedResult           string
+	}{
+		{
+			name:                     "successfully terminated",
+			instanceId:               "i-12312313",
+			instanceTerminationError: nil,
+			expectedError:            nil,
+			expectedResult:           TerminationEventActionSucceeded,
+		},
+		{
+			name:                     "already terminated",
+			instanceId:               "i-12312355",
+			instanceTerminationError: nil,
+			expectedError:            nil,
+			expectedResult:           TerminationEventActionSucceeded,
 		},
 	}
+	for _, tt := range tc {
+		t.Run(tt.name, func(t *testing.T) {
+			mockCtrl := gomock.NewController(t)
+			defer mockCtrl.Finish()
+			ec2Client := mockaws.NewMockEC2CLIENT(mockCtrl)
 
-	ec2Client.EXPECT().TerminateInstances(gomock.Any(), &expectedInput).Return(nil, nil).Times(1)
+			expectedInput := ec2.TerminateInstancesInput{
+				InstanceIds: []string{
+					tt.instanceId,
+				},
+			}
+			ec2Client.EXPECT().TerminateInstances(gomock.Any(), &expectedInput).Return(nil, tt.instanceTerminationError).Times(1)
 
-	cloudProvider := AwsCloudProvider{
-		Ec2Client: ec2Client,
+			cloudProvider := AwsCloudProvider{
+				Ec2Client: ec2Client,
+			}
+
+			res, err := cloudProvider.TerminateNode(context.TODO(), "aws://nonexistant/"+tt.instanceId)
+			assert.Equal(t, tt.expectedError, err)
+			assert.Equal(t, tt.expectedResult, res)
+		})
 	}
 
-	res, err := cloudProvider.TerminateNode(context.TODO(), "aws://nonexistant/"+instanceId)
-	assert.NoError(t, err)
-	assert.Equal(t, TerminationEventActionSucceeded, res)
 }
 
 func TestPrepareTerminationNodeNotInLB(t *testing.T) {

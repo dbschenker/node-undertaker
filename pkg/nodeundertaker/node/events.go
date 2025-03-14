@@ -28,6 +28,13 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE,
 			msg = strings.ToLower(reason)
 		}
 	}
+
+	fullMsg := msg
+
+	if len(msg) >= 1024 {
+		msg = msg[:1024]
+	}
+
 	var eventType string = ""
 	switch lvl {
 	case log.ErrorLevel:
@@ -62,7 +69,7 @@ func ReportEvent(ctx context.Context, cfg *config.Config, lvl log.Level, n NODE,
 		Type: eventType,
 	}
 
-	log.StandardLogger().Log(lvl, fmt.Sprintf("%s/%s: %s", n.GetKind(), n.GetName(), msg))
+	log.StandardLogger().Log(lvl, fmt.Sprintf("%s/%s: %s", n.GetKind(), n.GetName(), fullMsg))
 	_, err := cfg.K8sClient.EventsV1().Events(cfg.Namespace).Create(ctx, &evt, metav1.CreateOptions{})
 	if err != nil {
 		log.Errorf("Couldn't create event: %s\n due to %v", msg, err)

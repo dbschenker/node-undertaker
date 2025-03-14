@@ -2,7 +2,10 @@ package aws
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/aws/smithy-go"
+
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	autoscalingtypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
@@ -88,6 +91,20 @@ func (p AwsCloudProvider) terminateInstance(ctx context.Context, instanceId stri
 	}
 	log.Debugf("EC2 Instance %s will be terminated in AWS", string(instanceId))
 	_, err := p.Ec2Client.TerminateInstances(ctx, &input)
+
+	if err != nil {
+		var apiErr smithy.APIError
+		ok := errors.As(err, &apiErr)
+		if !ok {
+			return fmt.Errorf("expected err to be of type smithy.APIError, got %w", err)
+		}
+
+		if "InvalidInstanceID.NotFound" == apiErr.ErrorCode() {
+			log.Warnf("EC2 Instance %s doesn't exist. Probably it was terminated earlier", string(instanceId))
+			return nil
+		}
+	}
+
 	return err
 }
 
