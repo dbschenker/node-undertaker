@@ -178,12 +178,16 @@ func (n *Node) StartDrain(ctx context.Context, cfg *config.Config) {
 		DeleteEmptyDirData:  true,
 		Timeout:             time.Duration(cfg.CloudTerminationDelay) * time.Second,
 		DisableEviction:     false, // true - use delete rather than evict
-		OnPodDeletedOrEvicted: func(pod *v1.Pod, usingEviction bool) {
+		OnPodDeletionOrEvictionFinished: func(pod *v1.Pod, usingEviction bool, err error) {
 			operation := "deleted"
 			if usingEviction {
 				operation = "evicted"
 			}
-			log.Debugf("Pod %s in namespace: %s %s", pod.ObjectMeta.Name, pod.ObjectMeta.Namespace, operation)
+			if err != nil {
+				log.Warnf("failed to drain node %s: %v", n.Node.ObjectMeta.Name, err)
+			} else {
+				log.Debugf("Pod %s in namespace: %s %s", pod.ObjectMeta.Name, pod.ObjectMeta.Namespace, operation)
+			}
 		},
 		Out:    log.StandardLogger().Out,
 		ErrOut: log.StandardLogger().Out,

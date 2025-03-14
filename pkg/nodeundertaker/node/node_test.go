@@ -375,18 +375,25 @@ func TestFindLeaseOk(t *testing.T) {
 	nodev1 := v1.Node{
 		ObjectMeta: metav1.ObjectMeta{Name: nodeName},
 	}
+	var leaseDuration int32 = 100
 	lease := coordinationv1.Lease{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Lease",
+			APIVersion: coordinationv1.SchemeGroupVersion.String(),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      nodeName,
 			Namespace: namespace,
 		},
+		Spec: coordinationv1.LeaseSpec{
+			LeaseDurationSeconds: &leaseDuration,
+		},
 	}
+
 	cfg := config.Config{
-		K8sClient:          fake.NewClientset(),
+		K8sClient:          fake.NewClientset(&lease),
 		NodeLeaseNamespace: namespace,
 	}
-	_, err := cfg.K8sClient.CoordinationV1().Leases(namespace).Create(context.TODO(), &lease, metav1.CreateOptions{})
-	require.NoError(t, err)
 
 	node := CreateNode(&nodev1)
 	leaseret, err := node.findLease(context.TODO(), &cfg)
@@ -407,10 +414,10 @@ func TestFindLeaseMissing(t *testing.T) {
 	}
 
 	node := CreateNode(&nodev1)
-	leaseret, err := node.findLease(context.TODO(), &cfg)
+	_, err := node.findLease(context.TODO(), &cfg) // this returns empty lease instead of nil if not found
 	assert.Error(t, err)
 	assert.Equal(t, metav1.StatusReasonNotFound, errors.ReasonForError(err))
-	assert.Nil(t, leaseret)
+
 }
 
 func TestHasFreshLeaseOk(t *testing.T) {
@@ -710,6 +717,7 @@ func TestDrainWithBlockingPDB(t *testing.T) {
 	cfg := config.Config{
 		K8sClient:             clientset,
 		CloudTerminationDelay: 30,
+		Hostname:              "dummy-host",
 		Namespace:             v1.NamespaceDefault,
 	}
 
