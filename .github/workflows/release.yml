@@ -16,17 +16,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
-      with:
-        name: node-undertaker-binaries
-        path: bin
+        with:
+          name: node-undertaker-binaries
+          path: bin
 
       - name: Release
-      uses: softprops/action-gh-release@v1
-      with:
-        draft: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
-        prerelease: ${{ contains(github.ref, 'rc') }}
-        files: bin/node-undertaker*
-        append_body: true
-        body: |
-          Build also available as docker image:
-          `ghcr.io/${{ github.repository }}:${{ github.ref_name }}`
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
+          prerelease: ${{ contains(github.ref, 'rc') }}
+          files: bin/node-undertaker*
+          append_body: true
+          body: |
+            Build also available as docker image:
+            `ghcr.io/${{ github.repository }}:${{ github.ref_name }}`
