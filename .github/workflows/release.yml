@@ -17,8 +17,9 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: node-undertaker-binaries
+          pattern: node-undertaker-*
           path: bin
+          merge-multiple: true
 
       - name: Release
         uses: softprops/action-gh-release@v1
