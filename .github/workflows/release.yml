@@ -19,9 +19,8 @@ jobs:
       with:
         name: node-undertaker-binaries
         path: bin
-    - name: debug list files
-      run: find .
-    - name: Release
+
+      - name: Release
       uses: softprops/action-gh-release@v1
       with:
         draft: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') }}
