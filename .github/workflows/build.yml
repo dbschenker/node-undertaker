@@ -53,6 +53,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: github.event_name != 'pull_request'
         with:
-          name: node-undertaker-binaries
+          name: node-undertaker-${{ matrix.os }}-${{matrix.architecture}}
           path: bin/node-undertaker-*
           if-no-files-found: error
