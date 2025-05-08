@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubectl/pkg/drain"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 )
 
@@ -34,7 +35,8 @@ const (
 
 type Node struct {
 	*v1.Node
-	changed bool
+	Original *v1.Node
+	changed  bool
 }
 
 type NODE interface {
@@ -58,8 +60,9 @@ type NODE interface {
 
 func CreateNode(n *v1.Node) *Node {
 	node := Node{
-		Node:    n.DeepCopy(),
-		changed: false,
+		Node:     n.DeepCopy(),
+		changed:  false,
+		Original: n.DeepCopy(),
 	}
 	if node.Labels == nil {
 		node.Labels = make(map[string]string)
@@ -216,8 +219,10 @@ func (n *Node) PrepareTermination(ctx context.Context, cfg *config.Config) (stri
 // TODO: check if saving whole object works fine. Maybe it should be done using patches:  https://stackoverflow.com/questions/57310483/whats-the-shortest-way-to-add-a-label-to-a-pod-using-the-kubernetes-go-client
 func (n *Node) Save(ctx context.Context, cfg *config.Config) error {
 	if n.changed {
-		_, err := cfg.K8sClient.CoreV1().Nodes().Update(ctx, n.Node, metav1.UpdateOptions{})
-		//TODO maybe Patch instead of Update will work better
+		patch := client.MergeFrom(n.Original)
+
+		patchData, err := patch.Data(n.Node)
+		_, err = cfg.K8sClient.CoreV1().Nodes().Patch(ctx, n.Name, patch.Type(), patchData, metav1.PatchOptions{})
 		return err
 	}
 	return nil

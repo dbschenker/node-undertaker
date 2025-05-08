@@ -221,6 +221,217 @@ func TestSaveChange(t *testing.T) {
 	assert.Equal(t, newProviderId, nodes.Items[0].Spec.ProviderID)
 }
 
+func TestSave(t *testing.T) {
+	nodeName := "node1"
+	timestamp := time.Now()
+
+	testCases := []struct {
+		name        string
+		intialNode  *v1.Node
+		expected    *v1.Node
+		change      func(node *Node)
+		errExpected bool
+	}{
+		{
+			name: "no change",
+			intialNode: &v1.Node{
+				TypeMeta:   metav1.TypeMeta{Kind: "Node", APIVersion: v1.SchemeGroupVersion.Version},
+				ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+			},
+			expected: &v1.Node{
+				TypeMeta:   metav1.TypeMeta{Kind: "Node", APIVersion: v1.SchemeGroupVersion.Version},
+				ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+			},
+			change: func(node *Node) {},
+		},
+		{
+			name: "added ProviderID",
+			intialNode: &v1.Node{
+				TypeMeta:   metav1.TypeMeta{Kind: "Node", APIVersion: v1.SchemeGroupVersion.Version},
+				ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+			},
+			expected: &v1.Node{
+				TypeMeta:   metav1.TypeMeta{Kind: "Node", APIVersion: v1.SchemeGroupVersion.Version},
+				ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+				Spec: v1.NodeSpec{
+					ProviderID: "test-provider-id",
+				},
+			},
+			change: func(node *Node) {
+				node.Spec.ProviderID = "test-provider-id"
+				node.changed = true
+			},
+		},
+		{
+			name: "annotation, taint & label added",
+			intialNode: &v1.Node{
+				TypeMeta:   metav1.TypeMeta{Kind: "Node", APIVersion: v1.SchemeGroupVersion.Version},
+				ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+			},
+			expected: &v1.Node{
+				TypeMeta: metav1.TypeMeta{Kind: "Node", APIVersion: v1.SchemeGroupVersion.Version},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: nodeName,
+					Labels: map[string]string{
+						Label: "test-label",
+					},
+					Annotations: map[string]string{
+						TimestampAnnotation: timestamp.Format(time.RFC3339),
+					},
+				},
+				Spec: v1.NodeSpec{
+					Taints: []v1.Taint{
+						{
+							Key:    TaintKey,
+							Value:  TaintValue,
+							Effect: v1.TaintEffectNoSchedule,
+						},
+					},
+				},
+			},
+			change: func(node *Node) {
+				node.SetLabel("test-label")
+				node.SetActionTimestamp(timestamp)
+				node.Taint()
+				node.changed = true
+			},
+		},
+		{
+			name: "annotation, taint & label removed",
+			intialNode: &v1.Node{
+				TypeMeta: metav1.TypeMeta{Kind: "Node", APIVersion: v1.SchemeGroupVersion.Version},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: nodeName,
+					Labels: map[string]string{
+						Label: "test-label",
+					},
+					Annotations: map[string]string{
+						TimestampAnnotation: timestamp.Format(time.RFC3339),
+					},
+				},
+				Spec: v1.NodeSpec{
+					Taints: []v1.Taint{
+						{
+							Key:    TaintKey,
+							Value:  TaintValue,
+							Effect: v1.TaintEffectNoSchedule,
+						},
+					},
+				},
+			},
+			expected: &v1.Node{
+				TypeMeta: metav1.TypeMeta{Kind: "Node", APIVersion: v1.SchemeGroupVersion.Version},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: nodeName,
+				},
+			},
+			change: func(node *Node) {
+				node.RemoveLabel()
+				node.RemoveActionTimestamp()
+				node.Untaint()
+				node.changed = true
+			},
+		},
+		{
+			name: "annotation, taint & label removed with other label, annotation & taint present",
+			intialNode: &v1.Node{
+				TypeMeta: metav1.TypeMeta{Kind: "Node", APIVersion: v1.SchemeGroupVersion.Version},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: nodeName,
+					Labels: map[string]string{
+						"some-label":  "some-value",
+						Label:         "test-label",
+						"other-label": "other-value",
+					},
+					Annotations: map[string]string{
+						"some-annotation":   "some-value",
+						TimestampAnnotation: timestamp.Format(time.RFC3339),
+						"other-annotation":  "other-value",
+					},
+				},
+				Spec: v1.NodeSpec{
+					Taints: []v1.Taint{
+						{
+							Key:    "some-taint",
+							Value:  "some-value",
+							Effect: v1.TaintEffectNoSchedule,
+						},
+						{
+							Key:    TaintKey,
+							Value:  TaintValue,
+							Effect: v1.TaintEffectNoSchedule,
+						},
+						{
+							Key:    "other-taint",
+							Value:  "other-value",
+							Effect: v1.TaintEffectNoSchedule,
+						},
+					},
+				},
+			},
+			expected: &v1.Node{
+				TypeMeta: metav1.TypeMeta{Kind: "Node", APIVersion: v1.SchemeGroupVersion.Version},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: nodeName,
+					Labels: map[string]string{
+						"some-label":  "some-value",
+						"other-label": "other-value",
+					},
+					Annotations: map[string]string{
+						"some-annotation":  "some-value",
+						"other-annotation": "other-value",
+					},
+				},
+				Spec: v1.NodeSpec{
+					Taints: []v1.Taint{
+						{
+							Key:    "some-taint",
+							Value:  "some-value",
+							Effect: v1.TaintEffectNoSchedule,
+						},
+						{
+							Key:    "other-taint",
+							Value:  "other-value",
+							Effect: v1.TaintEffectNoSchedule,
+						},
+					},
+				},
+			},
+			change: func(node *Node) {
+				node.RemoveLabel()
+				node.RemoveActionTimestamp()
+				node.Untaint()
+				node.changed = true
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := config.Config{
+				K8sClient: fake.NewClientset(),
+			}
+			createdNode, err := cfg.K8sClient.CoreV1().Nodes().Create(context.TODO(), tc.intialNode, metav1.CreateOptions{})
+			require.NoError(t, err)
+			n := CreateNode(createdNode)
+			//apply changes
+			tc.change(n)
+
+			err = n.Save(context.TODO(), &cfg)
+			if tc.errExpected {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			ret, err := cfg.K8sClient.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected.Spec, ret.Spec)
+			assert.Equal(t, tc.expected.Annotations, ret.Annotations)
+			assert.Equal(t, tc.expected.Labels, ret.Labels)
+		})
+	}
+}
+
 func TestTaintNoTaints(t *testing.T) {
 	nodeName := "node1"
 	nodev1 := v1.Node{
@@ -321,6 +532,7 @@ func TestUntaintExistingTaints(t *testing.T) {
 	assert.Len(t, node.Spec.Taints, 2)
 	assert.True(t, node.changed)
 	assert.NotContains(t, node.Spec.Taints, v1.Taint{Key: TaintKey, Value: TaintValue, Effect: v1.TaintEffectNoSchedule})
+	assert.Len(t, node.Original.Spec.Taints, 3)
 }
 
 func TestSetActionTimestampNone(t *testing.T) {
