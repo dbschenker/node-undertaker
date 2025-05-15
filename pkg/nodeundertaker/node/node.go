@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubectl/pkg/drain"
+	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 )
@@ -36,7 +37,6 @@ const (
 type Node struct {
 	*v1.Node
 	Original *v1.Node
-	changed  bool
 }
 
 type NODE interface {
@@ -61,7 +61,6 @@ type NODE interface {
 func CreateNode(n *v1.Node) *Node {
 	node := Node{
 		Node:     n.DeepCopy(),
-		changed:  false,
 		Original: n.DeepCopy(),
 	}
 	if node.Labels == nil {
@@ -103,26 +102,21 @@ func (n *Node) GetLabel() string {
 func (n *Node) RemoveLabel() {
 	if _, found := n.ObjectMeta.Labels[Label]; found {
 		delete(n.ObjectMeta.Labels, Label)
-		n.changed = true
 	}
 }
 
 func (n *Node) RemoveActionTimestamp() {
 	if _, found := n.ObjectMeta.Annotations[TimestampAnnotation]; found {
 		delete(n.ObjectMeta.Annotations, TimestampAnnotation)
-		n.changed = true
 	}
 }
 
 func (n *Node) SetLabel(label string) {
 	n.ObjectMeta.Labels[Label] = label
-	n.changed = true
 }
 
 func (n *Node) SetActionTimestamp(t time.Time) {
-	n.changed = true
 	n.ObjectMeta.Annotations[TimestampAnnotation] = t.Format(time.RFC3339)
-	return
 }
 
 func (n *Node) GetActionTimestamp() (time.Time, error) {
@@ -146,7 +140,6 @@ func (n *Node) Taint() {
 		}
 	}
 	n.Spec.Taints = append(n.Spec.Taints, taint)
-	n.changed = true
 }
 
 func (n *Node) Untaint() {
@@ -161,13 +154,9 @@ func (n *Node) Untaint() {
 	for i := range n.Spec.Taints {
 		if n.Spec.Taints[i] != taint {
 			newTaints = append(newTaints, n.Spec.Taints[i])
-		} else {
-			n.changed = true
 		}
 	}
-	if n.changed {
-		n.Spec.Taints = newTaints
-	}
+	n.Spec.Taints = newTaints
 }
 
 func (n *Node) StartDrain(ctx context.Context, cfg *config.Config) {
@@ -216,9 +205,8 @@ func (n *Node) PrepareTermination(ctx context.Context, cfg *config.Config) (stri
 	return cfg.CloudProvider.PrepareTermination(ctx, n.Spec.ProviderID)
 }
 
-// TODO: check if saving whole object works fine. Maybe it should be done using patches:  https://stackoverflow.com/questions/57310483/whats-the-shortest-way-to-add-a-label-to-a-pod-using-the-kubernetes-go-client
 func (n *Node) Save(ctx context.Context, cfg *config.Config) error {
-	if n.changed {
+	if !reflect.DeepEqual(n.Original, n.Node) {
 		patch := client.MergeFrom(n.Original)
 
 		patchData, err := patch.Data(n.Node)

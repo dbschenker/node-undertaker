@@ -18,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/wait"
+	genericregistry "k8s.io/apiserver/pkg/registry/generic/registry"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
@@ -69,8 +70,7 @@ func TestGetLabelOk(t *testing.T) {
 		},
 	}
 	n := Node{
-		Node:    &v1node,
-		changed: false,
+		Node: &v1node,
 	}
 	ret := n.GetLabel()
 	assert.Equal(t, labelValue, ret)
@@ -117,7 +117,6 @@ func TestSetLabelOk(t *testing.T) {
 	ret, exists := n.ObjectMeta.Labels[Label]
 	assert.Equal(t, labelValue, ret)
 	assert.True(t, exists)
-	assert.True(t, n.changed)
 }
 
 func TestSetLabelEmpty(t *testing.T) {
@@ -134,7 +133,6 @@ func TestSetLabelEmpty(t *testing.T) {
 	ret, exists := n.ObjectMeta.Labels[Label]
 	assert.Equal(t, labelValue, ret)
 	assert.True(t, exists)
-	assert.True(t, n.changed)
 }
 
 func TestSetLabelOverwrite(t *testing.T) {
@@ -153,41 +151,12 @@ func TestSetLabelOverwrite(t *testing.T) {
 	ret, exists := n.ObjectMeta.Labels[Label]
 	assert.Equal(t, expectedLabelValue, ret)
 	assert.True(t, exists)
-	assert.True(t, n.changed)
-}
-
-func TestSaveNoChange(t *testing.T) {
-	nodeName := "node1"
-	nodev1 := v1.Node{
-		ObjectMeta: metav1.ObjectMeta{Name: nodeName},
-	}
-
-	cfg := config.Config{
-		K8sClient: fake.NewClientset(),
-	}
-	_, err := cfg.K8sClient.CoreV1().Nodes().Create(context.TODO(), &nodev1, metav1.CreateOptions{})
-	require.NoError(t, err)
-
-	nodes, err := cfg.K8sClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
-	assert.NoError(t, err)
-	assert.Len(t, nodes.Items, 1)
-	assert.Equal(t, nodeName, nodes.Items[0].Name)
-	assert.Empty(t, nodes.Items[0].Spec.ProviderID)
-
-	node := CreateNode(&nodev1)
-	node.Spec.ProviderID = "test"
-
-	err = node.Save(context.TODO(), &cfg)
-	assert.NoError(t, err)
-
-	nodes, err = cfg.K8sClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
-	assert.NoError(t, err)
-	assert.Len(t, nodes.Items, 1)
-	assert.Equal(t, nodeName, nodes.Items[0].Name)
-	assert.Empty(t, nodes.Items[0].Spec.ProviderID)
 }
 
 func TestSaveChange(t *testing.T) {
+	k8sClient, err := kwok.StartCluster(t, context.TODO())
+	require.NoError(t, err)
+
 	nodeName := "node1"
 	newProviderId := "test"
 
@@ -196,9 +165,9 @@ func TestSaveChange(t *testing.T) {
 	}
 
 	cfg := config.Config{
-		K8sClient: fake.NewClientset(),
+		K8sClient: k8sClient,
 	}
-	_, err := cfg.K8sClient.CoreV1().Nodes().Create(context.TODO(), &nodev1, metav1.CreateOptions{})
+	_, err = cfg.K8sClient.CoreV1().Nodes().Create(context.TODO(), &nodev1, metav1.CreateOptions{})
 	require.NoError(t, err)
 
 	nodes, err := cfg.K8sClient.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
@@ -207,9 +176,8 @@ func TestSaveChange(t *testing.T) {
 	assert.Equal(t, nodeName, nodes.Items[0].Name)
 	assert.Empty(t, nodes.Items[0].Spec.ProviderID)
 
-	node := CreateNode(&nodev1)
+	node := CreateNode(&nodes.Items[0])
 	node.Spec.ProviderID = newProviderId
-	node.changed = true
 
 	err = node.Save(context.TODO(), &cfg)
 	assert.NoError(t, err)
@@ -259,7 +227,6 @@ func TestSave(t *testing.T) {
 			},
 			change: func(node *Node) {
 				node.Spec.ProviderID = "test-provider-id"
-				node.changed = true
 			},
 		},
 		{
@@ -293,7 +260,6 @@ func TestSave(t *testing.T) {
 				node.SetLabel("test-label")
 				node.SetActionTimestamp(timestamp)
 				node.Taint()
-				node.changed = true
 			},
 		},
 		{
@@ -329,7 +295,6 @@ func TestSave(t *testing.T) {
 				node.RemoveLabel()
 				node.RemoveActionTimestamp()
 				node.Untaint()
-				node.changed = true
 			},
 		},
 		{
@@ -401,7 +366,6 @@ func TestSave(t *testing.T) {
 				node.RemoveLabel()
 				node.RemoveActionTimestamp()
 				node.Untaint()
-				node.changed = true
 			},
 		},
 	}
@@ -432,6 +396,70 @@ func TestSave(t *testing.T) {
 	}
 }
 
+func TestSaveRace(t *testing.T) {
+	nodeName := "node1"
+	nodev1 := v1.Node{
+		ObjectMeta: metav1.ObjectMeta{Name: nodeName},
+	}
+	timestamp := time.Now()
+
+	expectedNode := nodev1.DeepCopy()
+	expectedNode.Labels = map[string]string{
+		"test-label": "test",
+	}
+	expectedNode.Annotations = map[string]string{
+		"test-annotation": "test123",
+	}
+	expectedNode.Spec.Taints = []v1.Taint{
+		{
+			Key:    "aliens",
+			Value:  "are-here",
+			Effect: v1.TaintEffectNoSchedule,
+		},
+	}
+
+	cfg := config.Config{
+		K8sClient: fake.NewClientset(),
+	}
+	createdNode, err := cfg.K8sClient.CoreV1().Nodes().Create(context.TODO(), &nodev1, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	n := CreateNode(createdNode) // FIXME: fails due to limitations of fake client https://pkg.go.dev/sigs.k8s.io/controller-runtime/pkg/client/fake
+
+	// other process modifies node
+	copiedNode := createdNode.DeepCopy()
+	if copiedNode.Labels == nil {
+		copiedNode.Labels = map[string]string{}
+	}
+	copiedNode.Labels["test-label"] = "test"
+	if copiedNode.Annotations == nil {
+		copiedNode.Annotations = map[string]string{}
+	}
+	copiedNode.Annotations["test-annotation"] = "test123"
+	copiedNode.Spec.Taints = []v1.Taint{
+		{
+			Key:    "aliens",
+			Value:  "are-here",
+			Effect: v1.TaintEffectNoSchedule,
+		},
+	}
+	_, err = cfg.K8sClient.CoreV1().Nodes().Update(context.TODO(), copiedNode, metav1.UpdateOptions{})
+	require.NoError(t, err)
+
+	// operator does its modifications
+	n.Taint()
+	n.SetLabel("test-label-value")
+	n.SetActionTimestamp(timestamp)
+	err = n.Save(context.TODO(), &cfg)
+	assert.ErrorContains(t, err, genericregistry.OptimisticLockErrorMsg)
+
+	ret, err := cfg.K8sClient.CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
+	require.NoError(t, err)
+	assert.Equal(t, expectedNode.Spec, ret.Spec)
+	assert.Equal(t, expectedNode.Annotations, ret.Annotations)
+	assert.Equal(t, expectedNode.Labels, ret.Labels)
+}
+
 func TestTaintNoTaints(t *testing.T) {
 	nodeName := "node1"
 	nodev1 := v1.Node{
@@ -445,7 +473,6 @@ func TestTaintNoTaints(t *testing.T) {
 	assert.Contains(t, node.Spec.Taints, v1.Taint{
 		Key: TaintKey, Value: "", Effect: v1.TaintEffectNoSchedule,
 	})
-	assert.True(t, node.changed)
 }
 
 func TestTaintDifferentTaints(t *testing.T) {
@@ -469,7 +496,6 @@ func TestTaintDifferentTaints(t *testing.T) {
 	assert.Contains(t, node.Spec.Taints, v1.Taint{
 		Key: "sample", Value: "different", Effect: v1.TaintEffectPreferNoSchedule,
 	})
-	assert.True(t, node.changed)
 }
 
 func TestTaintExistingTaint(t *testing.T) {
@@ -496,7 +522,6 @@ func TestTaintExistingTaint(t *testing.T) {
 		Value:  TaintValue,
 		Effect: v1.TaintEffectNoSchedule,
 	})
-	assert.False(t, node.changed)
 }
 
 func TestUntaintNoTaint(t *testing.T) {
@@ -510,7 +535,6 @@ func TestUntaintNoTaint(t *testing.T) {
 	node.Untaint()
 
 	assert.Len(t, node.Spec.Taints, 0)
-	assert.False(t, node.changed)
 }
 
 func TestUntaintExistingTaints(t *testing.T) {
@@ -530,7 +554,6 @@ func TestUntaintExistingTaints(t *testing.T) {
 	node.Untaint()
 
 	assert.Len(t, node.Spec.Taints, 2)
-	assert.True(t, node.changed)
 	assert.NotContains(t, node.Spec.Taints, v1.Taint{Key: TaintKey, Value: TaintValue, Effect: v1.TaintEffectNoSchedule})
 	assert.Len(t, node.Original.Spec.Taints, 3)
 }
@@ -733,7 +756,6 @@ func TestRemoveLabelOk(t *testing.T) {
 	ret, exists := n.ObjectMeta.Labels[Label]
 	assert.Equal(t, "", ret)
 	assert.False(t, exists)
-	assert.True(t, n.changed)
 }
 
 func TestRemoveLabelNotExisting(t *testing.T) {
@@ -751,7 +773,6 @@ func TestRemoveLabelNotExisting(t *testing.T) {
 	ret, exists := n.ObjectMeta.Labels[Label]
 	assert.Equal(t, "", ret)
 	assert.False(t, exists)
-	assert.False(t, n.changed)
 }
 
 func TestRemoveActionTimestampOk(t *testing.T) {
@@ -769,7 +790,6 @@ func TestRemoveActionTimestampOk(t *testing.T) {
 	ret, exists := n.ObjectMeta.Annotations[TimestampAnnotation]
 	assert.Equal(t, "", ret)
 	assert.False(t, exists)
-	assert.True(t, n.changed)
 }
 
 func TestRemoveActionTimestampNotExisting(t *testing.T) {
@@ -787,7 +807,6 @@ func TestRemoveActionTimestampNotExisting(t *testing.T) {
 	ret, exists := n.ObjectMeta.Annotations[TimestampAnnotation]
 	assert.Equal(t, "", ret)
 	assert.False(t, exists)
-	assert.False(t, n.changed)
 }
 
 func TestPrepareTermination(t *testing.T) {
@@ -1065,5 +1084,4 @@ func TestSetActionTimestamp(t *testing.T) {
 	ret, exists := n.ObjectMeta.Annotations[TimestampAnnotation]
 	assert.Equal(t, timeNow.Format(time.RFC3339), ret)
 	assert.True(t, exists)
-	assert.True(t, n.changed)
 }
