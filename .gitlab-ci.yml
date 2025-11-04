@@ -1,5 +1,3 @@
-image: golang:1.25
-
 include:
   - project: shared-scripts/gitlab-ci
     file: /autodevops.yml
