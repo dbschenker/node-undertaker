@@ -35,6 +35,16 @@ Docker Release:
   variables:
     PROJECT_VERSION: "${CI_COMMIT_REF_NAME}"
 
+Scan image:
+  variables:
+    PROJECT_VERSION: "${CI_COMMIT_REF_NAME}"
+Sign image:
+  variables:
+    PROJECT_VERSION: "${CI_COMMIT_REF_NAME}"
+Sign SBOM:
+  variables:
+    PROJECT_VERSION: "${CI_COMMIT_REF_NAME}"
+
 Deploy Dev Manual:
   rules:
   - when: never
