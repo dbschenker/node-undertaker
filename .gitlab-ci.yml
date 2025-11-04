@@ -7,7 +7,7 @@ image: golang:1.25
 include:
   - project: shared-scripts/gitlab-ci
     file: /autodevops-golang.yml
-    ref: v1
+    ref: v2
 
 # mockgen setup
 Test:
