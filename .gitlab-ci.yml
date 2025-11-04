@@ -1,14 +1,16 @@
-variables:
-  TYPE: app
-  MULTI_ARCH: "true"
-
 image: golang:1.25
 
 include:
   - project: shared-scripts/gitlab-ci
-    file: /autodevops-golang.yml
-    ref: v2
-
+    file: /autodevops.yml
+    ref: feat/v3
+    inputs:
+      target: golang
+      topic: none
+      dev_branch: main
+      multi_arch: "enabled"
+      prod_deployment: false
+      image: golang:1.25
 # mockgen setup
 Test:
   before_script:
