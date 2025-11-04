@@ -5,7 +5,7 @@ include:
     inputs:
       target: golang
       topic: none
-      dev_branch: main
+      dev_branch: $CI_DEFAULT_BRANCH
       multi_arch: "enabled"
       prod_deployment: false
 
