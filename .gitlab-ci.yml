@@ -6,7 +6,7 @@ include:
       target: golang
       topic: none
       dev_branch: $CI_DEFAULT_BRANCH
-      multi_arch: "enabled"
+      multi_arch: "native"
       prod_deployment: false
 
 # mockgen setup
