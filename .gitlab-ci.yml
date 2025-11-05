@@ -6,7 +6,7 @@ include:
       target: golang
       topic: none
       dev_branch: $CI_DEFAULT_BRANCH
-      multi_arch: "native"
+      multi_arch: "enabled"
       prod_deployment: false
 
 # mockgen setup
@@ -32,8 +32,17 @@ Dependency-Track:
     - go install go.uber.org/mock/mockgen@latest
 
 Docker Release:
+  tags:
+  - clz-large
   variables:
     PROJECT_VERSION: "${CI_COMMIT_REF_NAME}"
+Docker Manual:
+  tags:
+  - clz-large
+Docker Dev:
+  tags:
+  - clz-large
+
 
 Scan image:
   variables:
