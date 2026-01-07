@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   node-undertaker:
   - apiVersion: v2
+    appVersion: v1.1.5
+    created: "2026-01-07T08:12:29.627600151Z"
+    description: A Helm chart for node-undertaker
+    digest: 30cf4973c8f50ba06b7f1c4e91978984241bb77ba128d97947daf35ea1ebf91d
+    name: node-undertaker
+    type: application
+    urls:
+    - https://github.com/dbschenker/node-undertaker/releases/download/node-undertaker-1.0.11/node-undertaker-1.0.11.tgz
+    version: 1.0.11
+  - apiVersion: v2
     appVersion: v1.1.4
     created: "2025-11-04T08:50:45.427276361Z"
     description: A Helm chart for node-undertaker
@@ -111,4 +121,4 @@ entries:
     urls:
     - https://github.com/dbschenker/node-undertaker/releases/download/node-undertaker-1.0.0/node-undertaker-1.0.0.tgz
     version: 1.0.0
-generated: "2025-11-04T08:50:45.427317378Z"
+generated: "2026-01-07T08:12:29.627645575Z"
