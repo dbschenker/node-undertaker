@@ -1,13 +1,18 @@
-variables:
-  TYPE: app
-  MULTI_ARCH: "true"
-
-image: golang:1.25
-
 include:
   - project: shared-scripts/gitlab-ci
-    file: /autodevops-golang.yml
-    ref: v2
+    file: /autodevops.yml
+    ref: v3
+    inputs:
+      target: golang
+      topic: none
+      dev_branch: $CI_DEFAULT_BRANCH
+      multi_arch: true
+      prod_deployment: false
+      fat_deployment: false
+      int_deployment: false
+      dev_deployment: false
+      release_tag: ${CI_COMMIT_REF_NAME}
+
 
 # mockgen setup
 Test:
@@ -32,13 +37,12 @@ Dependency-Track:
     - go install go.uber.org/mock/mockgen@latest
 
 Docker Release:
-  variables:
-    PROJECT_VERSION: "${CI_COMMIT_REF_NAME}"
+  tags:
+  - clz-large
+Docker Manual:
+  tags:
+  - clz-large
+Docker Dev:
+  tags:
+  - clz-large
 
-Deploy Dev Manual:
-  rules:
-  - when: never
-
-Deploy Fat:
-  rules:
-    - when: never
