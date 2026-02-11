@@ -39,9 +39,7 @@ Dependency-Track:
 Docker Release:
   tags:
   - clz-large
-Docker Manual:
-  tags:
-  - clz-large
+
 Docker Dev:
   tags:
   - clz-large
