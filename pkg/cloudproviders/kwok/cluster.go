@@ -3,7 +3,6 @@ package kwok
 import (
 	"context"
 	"fmt"
-	"github.com/docker/go-connections/nat"
 	testcontainers "github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"k8s.io/client-go/kubernetes"
@@ -25,8 +24,8 @@ func StartCluster(t *testing.T, ctx context.Context) (*kubernetes.Clientset, err
 		Image:        KwokImage,
 		ExposedPorts: []string{port},
 		WaitingFor: wait.ForAll(
-			wait.ForListeningPort(nat.Port(port)),
-			wait.ForHTTP("/readyz").WithPort(nat.Port(port)),
+			wait.ForListeningPort(port),
+			wait.ForHTTP("/readyz").WithPort(port),
 		),
 	}
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
