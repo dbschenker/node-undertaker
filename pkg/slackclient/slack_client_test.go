@@ -2,12 +2,13 @@ package slackclient
 
 import (
 	"context"
-	"github.com/dbschenker/node-undertaker/pkg/nodeundertaker/config"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
+
+	"github.com/dbschenker/node-undertaker/pkg/nodeundertaker/config"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSendNotification(t *testing.T) {
@@ -35,7 +36,7 @@ func TestSendNotification(t *testing.T) {
 		{
 			name:           "Invalid URL",
 			message:        "Test message",
-			webhookURL:     "://invalid-url",
+			webhookURL:     "/invalid-url",
 			expectedStatus: 0,
 			expectedError:  true,
 		},
